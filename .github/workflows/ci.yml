@@ -1,0 +1,20 @@
+name: repo-check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  repo-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0   # full history — the checker verifies commit authors + trailers
+      - name: Run anti-drift checks
+        run: python3 tools/repo-check.py

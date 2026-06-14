@@ -1,0 +1,5 @@
+# Code owners — automatically requested for review on matching paths.
+# Create + merge this file before enabling "Require review from Code Owners" in the ruleset.
+
+# Default owner for everything in the repo.
+*       @KristianBremnesABP

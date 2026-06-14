@@ -20,7 +20,8 @@ This repository contains Power BI report and semantic model projects in PBIP for
 
 ## MCP usage guidance
 - Use local Power BI Modeling MCP Server for semantic model authoring and structural changes
-- For thin reports connected to service models, prefer connecting directly to the semantic model in Fabric Workspace when supported
+- - For thin reports, always connect using:
+  "Connect to semantic model '<ModelName>' in Fabric Workspace 'analytics_dev'"
 - For insight and query scenarios against service-hosted semantic models, prefer the remote Power BI MCP server when available
 
 ## Imported Power BI agent resources
@@ -42,4 +43,23 @@ These resources are reviewed and used as supporting guidance, not as an unbounde
 - Do not change connection details or workspace bindings without confirmation
 - Do not commit local machine settings, secrets, caches, or temporary files
 - Always preserve PBIP/TMDL/PBIR structure integrity
-``
+- Do not create new semantic models if a shared model already exists in analytics_dev
+
+## Our workspace setup
+
+- DEV workspace: analytics_dev
+- No separate TEST/PROD workspaces currently
+
+We primarily use thin reports connected to semantic models in this workspace.
+
+## Modeling approach
+
+- Prefer thin reports with shared semantic models
+- Semantic models are managed centrally in Fabric
+- Reports should not duplicate model logic
+
+## Naming conventions
+
+- Measures: PascalCase (e.g. TotalRevenue, ActiveUsers)
+- Tables: Fact/Dim prefixes where relevant
+- Columns: Clear business names

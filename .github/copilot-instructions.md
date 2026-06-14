@@ -39,7 +39,42 @@ in [`AGENTS.md`](../AGENTS.md) — read that first.
 - Ask the user to verify the result in the live workspace before proceeding.
 - If a feature is geography-limited (for example, a US-only preview), say so explicitly.
 
+## MCP usage guidance (project-specific)
+
+- For thin reports, always connect using:
+  "Connect to semantic model '<ModelName>' in Fabric Workspace 'analytics_dev'"
+
+- Avoid using local Power BI Desktop connection when working with shared models
+
+- Use MCP for:
+  - DAX creation and validation
+  - Model exploration
+  - Dependency analysis
+
 ## What NOT to do
 
 - Do not invent M or DAX syntax from memory — verify with `context7` or `microsoft_learn`.
 - Do not propose schema changes to a PROD semantic model without explicit user confirmation.
+
+## Our workspace setup
+
+- DEV workspace: analytics_dev
+- No separate TEST/PROD workspaces currently
+
+We primarily use thin reports connected to semantic models in this workspace.
+
+## Modeling approach
+
+- Prefer thin reports with shared semantic models
+- Semantic models are managed centrally in Fabric
+- Reports should not duplicate model logic; calculations should be implemented in the semantic model when possible
+- Avoid creating local semantic models unless explicitly required
+
+## Naming conventions
+
+- Measures: PascalCase (e.g. TotalRevenue, ActiveUsers)
+- Tables: Fact/Dim prefixes where relevant (e.g. FactSales, DimDate)
+- Columns: Clear business names, avoid abbreviations
+- Always check if a semantic model already exists before suggesting a new one
+- Prefer reuse of shared semantic models over duplication
+- Keep business logic in the semantic model when possible, not in individual reports

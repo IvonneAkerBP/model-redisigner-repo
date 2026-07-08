@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "af5d22d61a3cb92cbafb",
+  "position": {
+    "x": 1425.4893617021273,
+    "y": 612.55319148936189,
+    "z": 22000,
+    "height": 267.57446808510633,
+    "width": 471.82978723404267,
+    "tabOrder": 21000
+  },
+  "visualGroup": {
+    "displayName": "oil",
+    "groupMode": "ScaleMode"
+  },
+  "isHidden": true
+}

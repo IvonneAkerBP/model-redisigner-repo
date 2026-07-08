@@ -1,0 +1,134 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 55.399577206344986,
+            "y": 224.50025591810618
+          },
+          "nodeIndex": "Emissions to air",
+          "nodeLineageTag": "0887925e-5358-4502-ab1a-315009a8d7d9",
+          "size": {
+            "height": 1000,
+            "width": 234
+          },
+          "zIndex": 11
+        },
+        {
+          "location": {
+            "x": 1042.901616423479,
+            "y": 67.51887396033267
+          },
+          "nodeIndex": "Location",
+          "size": {
+            "height": 216,
+            "width": 234
+          },
+          "zIndex": 7
+        },
+        {
+          "location": {
+            "x": 1363.8561790701763,
+            "y": 362.91394753678816
+          },
+          "nodeIndex": "Oily water",
+          "size": {
+            "height": 683.747720327138,
+            "width": 234
+          },
+          "zIndex": 8
+        },
+        {
+          "location": {
+            "x": 453.32832626690049,
+            "y": 408.6242933510751
+          },
+          "nodeIndex": "CH4_NMVOC",
+          "size": {
+            "height": 496.12431222008956,
+            "width": 234
+          },
+          "zIndex": 5
+        },
+        {
+          "location": {
+            "x": 1081.9645623671793,
+            "y": 460.1628700747226
+          },
+          "nodeIndex": "Kaldvent volum",
+          "size": {
+            "height": 440.8047344849648,
+            "width": 234
+          },
+          "zIndex": 6
+        },
+        {
+          "location": {
+            "x": 1088.7742459970898,
+            "y": 1046.0460318870687
+          },
+          "nodeIndex": "Dim_Date",
+          "nodeLineageTag": "49f3553e-f207-4678-9d86-edf5682e93a4",
+          "size": {
+            "height": 571.76346769033921,
+            "width": 234
+          },
+          "zIndex": 9
+        },
+        {
+          "location": {
+            "x": 2494.9,
+            "y": 14
+          },
+          "nodeIndex": "Emissions to air CO2 Hod",
+          "size": {
+            "height": 272,
+            "width": 234
+          },
+          "zIndex": 2
+        },
+        {
+          "location": {
+            "x": 2657.3234165067179,
+            "y": 359.53800383877166
+          },
+          "nodeIndex": "Location3",
+          "nodeLineageTag": "8888b212-a4ce-4edb-9ff3-5b4ad99cb233",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 1
+        },
+        {
+          "location": {
+            "x": 2047.4403460182234,
+            "y": 557.62643884820443
+          },
+          "nodeIndex": "Radioaktive isotoper",
+          "nodeLineageTag": "b4b12c8f-2419-441d-adc6-73609241e603",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 10
+        }
+      ],
+      "name": "All tables",
+      "zoomValue": 36,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "All tables",
+  "defaultDiagram": "All tables"
+}

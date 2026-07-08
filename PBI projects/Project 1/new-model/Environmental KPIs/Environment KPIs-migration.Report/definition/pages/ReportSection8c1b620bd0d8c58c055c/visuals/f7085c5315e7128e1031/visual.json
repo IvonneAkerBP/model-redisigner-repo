@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "f7085c5315e7128e1031",
+  "position": {
+    "x": 1407.4285714285713,
+    "y": 147.42857142857142,
+    "z": 18000,
+    "height": 332.57142857142856,
+    "width": 490.28571428571428,
+    "tabOrder": 17000
+  },
+  "visualGroup": {
+    "displayName": "cvent",
+    "groupMode": "ScaleMode"
+  },
+  "isHidden": true
+}

@@ -1,0 +1,250 @@
+table 'Kaldvent volum'
+	lineageTag: 485ce85d-4e90-400b-977c-cd662c859550
+
+	measure 'Volume (1000 m3) QTD' =
+			
+			IF(
+				ISFILTERED('Dim_Date'[Date]),
+				ERROR("Time intelligence quick measures can only be grouped or filtered by the Power BI-provided date hierarchy or primary date column."),
+				TOTALQTD(SUM('Kaldvent volum'[Volume (1000 m3)]), 'Dim_Date'[Date])
+			)
+		lineageTag: 61146486-0e8b-403d-b310-087ec0989a22
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Vented KPI year' = CALCULATE(MAX('Kaldvent volum'[Tillatelse Kaldvent])*0.9,('Kaldvent volum'[Field]  IN {"Valhall", "Ula", "Hod"})) + CALCULATE(MAX('Kaldvent volum'[Tillatelse Kaldvent]), NOT ('Kaldvent volum'[Field]  IN {"Valhall", "Ula", "Hod"}))
+		lineageTag: 1dfafa1a-62d0-4370-8e2a-209f8f097d1f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Volume (1000 m3) YTD' =
+			
+			IF(
+				ISFILTERED('Dim_Date'[Date]),
+				ERROR("Time intelligence quick measures can only be grouped or filtered by the Power BI-provided date hierarchy or primary date column."),
+				TOTALYTD(SUM('Kaldvent volum'[Volume (1000 m3)]), 'Dim_Date'[Date].[Date])
+			)
+		lineageTag: ea69b967-8d5d-4be1-a333-8f78a9011837
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 7fc1b873-3c51-47fe-9f62-2fd35bce4ac6
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column facility
+		dataType: string
+		lineageTag: ca33977b-2d5c-4ed7-beea-b4a8807c78f8
+		summarizeBy: none
+		sourceColumn: facility
+
+		annotation SummarizationSetBy = Automatic
+
+	column loc_key
+		dataType: string
+		lineageTag: 40d54cc5-0717-4a34-8325-9608e0779ecf
+		summarizeBy: none
+		sourceColumn: loc_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Tillatelse Kaldvent'
+		dataType: double
+		lineageTag: a14a4876-3bc4-453d-be77-10bff4825984
+		summarizeBy: sum
+		sourceColumn: Tillatelse Kaldvent
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Division
+		dataType: double
+		lineageTag: eaa4049b-02e6-4fa5-b7ff-fe4e63873ae9
+		summarizeBy: sum
+		sourceColumn: Division
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'KPI Kaldvent QTD'
+		dataType: double
+		lineageTag: 9e346cee-8014-409d-a466-30360a58bc5b
+		summarizeBy: sum
+		sourceColumn: KPI Kaldvent QTD
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: bfbf5360-2328-488b-8ea4-8489a2aab295
+		summarizeBy: sum
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quarter
+		dataType: int64
+		formatString: 0
+		lineageTag: 1c7441c7-81d2-49f8-bee4-23a3ee3436c6
+		summarizeBy: sum
+		sourceColumn: Quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column field
+		dataType: string
+		lineageTag: eac53924-8773-4402-b3ad-be0b92f0cbea
+		summarizeBy: none
+		sourceColumn: field
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Volume (1000 m3)'
+		dataType: double
+		lineageTag: 715e387b-987d-4de0-ae09-17c5f537b7a0
+		summarizeBy: sum
+		sourceColumn: Volume (1000 m3)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'Kaldvent volum-d1ac4434-8801-471b-980e-90ba7ca74a6e' = m
+		mode: import
+		source = ```
+				let
+				    Source = Sql.Database(
+				        "obax4o2iqosevp5oa2r6dbtune-2dhddioar5aebauc4huzjvnrve.datawarehouse.fabric.microsoft.com",
+				        "wh_gold_hsseq",
+				        [Query = "
+				        SELECT t.*,
+				    CASE
+				        WHEN IIF([Year] > 2024 AND [Year] < 2026,'y','n') = 'y' THEN [Tillatelse Kaldvent] / 12.0 * MONTH([Date])
+				
+				        WHEN IIF([Year] = 2026 AND [field] <> 'Edvard Grieg' AND [field] <>'PL 001B Ivar Aasen','y','n') = 'y' THEN [Tillatelse Kaldvent] * 0.9 / 12.0 * MONTH([Date])
+				
+				        WHEN IIF([field] = 'Edvard Grieg' AND [Year] = 2026,'y','n') = 'y' THEN 45.0 / 12.0 * MONTH([Date])
+				        WHEN IIF([field] = 'PL 001B Ivar Aasen' AND [Year] = 2026,'y','n') = 'y' THEN 45.0 / 12.0 * MONTH([Date])
+				
+				        WHEN DATEPART(Q, [Date]) = 1 AND IIF([field] = 'Edvard Grieg' AND [Year] = 2023,'y','n') = 'y' THEN 40.0/3 * MONTH([Date])
+				        WHEN DATEPART(Q, [Date]) = 1 AND IIF([field] = 'Edvard Grieg' AND [Year] = 2023,'y','n') = 'n' THEN CAST([Division] AS float) * MONTH([Date])
+				
+				        WHEN DATEPART(Q, [Date]) = 2 AND IIF([field] = 'Edvard Grieg' AND [Year] = 2023,'y','n') = 'y' THEN 40.0/3 * (MONTH([Date]) - 3)
+				        WHEN DATEPART(Q, [Date]) = 2 AND IIF([field] = 'Edvard Grieg' AND [Year] = 2023,'y','n') = 'n' THEN CAST([Division] AS float) * (MONTH([Date]) - 3)
+				
+				        WHEN DATEPART(Q, [Date]) = 3 AND IIF([field] = 'Edvard Grieg' AND [Year] = 2023,'y','n') = 'y' THEN 40.0/3 * (MONTH([Date]) - 6)
+				        WHEN DATEPART(Q, [Date]) = 3 AND IIF([field] = 'Edvard Grieg' AND [Year] = 2023,'y','n') = 'n' THEN CAST([Division] AS float) * (MONTH([Date]) - 6)
+				
+				        WHEN DATEPART(Q, [Date]) = 4 AND IIF([field] = 'Edvard Grieg' AND [Year] = 2023,'y','n') = 'y' THEN 40.0/3 * (MONTH([Date]) - 9)
+				        WHEN IIF(DATEPART(Q, [Date]) = 4 AND [field] = 'Alvheim' AND [Year] = 2023,'y','n') = 'y' THEN 82.0/3 * (MONTH([Date]) - 9)
+				
+				        WHEN IIF(DATEPART(Q, [Date]) = 4 AND ([field] = 'Alvheim' OR [field] = 'Edvard Grieg') AND [Year] = 2023,'y','n') = 'n'
+				             THEN CAST([Division] AS float) * (MONTH([Date]) - 9)
+				    END AS [KPI Kaldvent QTD]
+				FROM(
+				    SELECT t1.*,
+				           [Tillatelse Kaldvent] / 3 AS [Division]
+				    FROM(
+				        SELECT
+				              CAST([date] AS date) AS [Date]
+				            , REPLACE([field], 'PL 001B Ivar Aasen', 'Ivar Aasen') AS [field]
+				            , [facility]
+				            , [volume_m3]/1000 as [Volume (1000 m3)]
+				            , CONCAT(REPLACE([field], 'PL 001B Ivar Aasen', 'Ivar Aasen'), '_', [facility], '_', YEAR([date])) AS [loc_key]
+				            , YEAR([date]) AS [Year]
+				            , DATEPART(QUARTER, [date]) AS [Quarter]
+				            , CASE
+				                WHEN [field] = 'Alvheim' AND YEAR([date]) = 2020 THEN
+				                    CASE WHEN DATEPART(Q, [date]) = 1 THEN 39.6
+				                         WHEN DATEPART(Q, [date]) = 2 THEN 18.4
+				                         WHEN DATEPART(Q, [date]) = 3 THEN 18.4
+				                         WHEN DATEPART(Q, [date]) = 4 THEN 18.4 END
+				                WHEN [field] = 'Alvheim' AND YEAR([date]) = 2021 THEN
+				                    CASE WHEN DATEPART(Q, [date]) = 1 THEN 108
+				                         WHEN DATEPART(Q, [date]) = 2 THEN 108
+				                         WHEN DATEPART(Q, [date]) = 3 THEN 200
+				                         WHEN DATEPART(Q, [date]) = 4 THEN 108 END
+				                WHEN [field] = 'Alvheim' AND YEAR([date]) = 2022 THEN 100
+				                WHEN [field] = 'Alvheim' AND YEAR([date]) = 2023 THEN
+				                    CASE WHEN DATEPART(Q, [date]) = 1 THEN 82
+				                         WHEN DATEPART(Q, [date]) = 2 THEN 82
+				                         WHEN DATEPART(Q, [date]) = 3 THEN 82
+				                         WHEN DATEPART(Q, [date]) = 4 THEN 130 END
+				                WHEN [field] = 'Alvheim' AND YEAR([date]) = 2024 THEN 100
+				                WHEN [field] = 'Alvheim' AND YEAR([date]) = 2025 THEN 263
+				                WHEN [field] = 'Alvheim' AND YEAR([date]) = 2026 THEN 329
+				
+				                WHEN [field] = 'Skarv' AND YEAR([date]) = 2020 THEN 12
+				                WHEN [field] = 'Skarv' AND YEAR([date]) = 2021 THEN 23
+				                WHEN [field] = 'Skarv' AND YEAR([date]) = 2022 THEN 20
+				                WHEN [field] = 'Skarv' AND YEAR([date]) = 2023 THEN 25
+				                WHEN [field] = 'Skarv' AND YEAR([date]) = 2024 THEN 25
+				                WHEN [field] = 'Skarv' AND YEAR([date]) = 2025 THEN 40
+				                WHEN [field] = 'Skarv' AND YEAR([date]) = 2026 THEN 200
+				
+				                WHEN [field] = 'Edvard Grieg' AND YEAR([date]) > 2021 AND YEAR([date]) < 2023 THEN
+				                    CASE WHEN DATEPART(Q, [date]) = 1 THEN 52
+				                         WHEN DATEPART(Q, [date]) = 2 THEN 59
+				                         WHEN DATEPART(Q, [date]) = 3 THEN 52
+				                         WHEN DATEPART(Q, [date]) = 4 THEN 58 END
+				
+				                WHEN [field] = 'Edvard Grieg' AND YEAR([date]) = 2023 THEN 54
+				                WHEN [field] = 'Edvard Grieg' AND YEAR([date]) = 2024 THEN 45
+				                WHEN [field] = 'Edvard Grieg' AND YEAR([date]) = 2025 THEN 45
+				                WHEN [field] = 'Edvard Grieg' AND YEAR([date]) = 2026 THEN 198
+				
+				                WHEN [field] = 'Valhall' AND YEAR([date]) = 2026 THEN 52
+				                WHEN [field] = 'Ula' AND YEAR([date]) = 2026 THEN 352
+				
+				                WHEN [field] = 'PL 001B Ivar Aasen' AND YEAR([date]) = 2020 THEN
+				                    CASE WHEN DATEPART(Q, [date]) = 1 THEN 18
+				                         WHEN DATEPART(Q, [date]) = 2 THEN 18
+				                         WHEN DATEPART(Q, [date]) = 3 THEN 18
+				                         WHEN DATEPART(Q, [date]) = 4 THEN 18 END
+				                WHEN [field] = 'PL 001B Ivar Aasen' AND YEAR([date]) = 2021 THEN 18
+				                WHEN [field] = 'PL 001B Ivar Aasen' AND YEAR([date]) = 2022 THEN 27
+				                WHEN [field] = 'PL 001B Ivar Aasen' AND YEAR([date]) = 2023 THEN
+				                    CASE WHEN DATEPART(Q, [date]) = 1 THEN 13
+				                         WHEN DATEPART(Q, [date]) = 2 THEN 10
+				                         WHEN DATEPART(Q, [date]) = 3 THEN 10
+				                         WHEN DATEPART(Q, [date]) = 4 THEN 10 END
+				                WHEN [field] = 'PL 001B Ivar Aasen' AND YEAR([date]) = 2024 THEN
+				                    CASE WHEN DATEPART(Q, [date]) = 1 THEN 45
+				                         WHEN DATEPART(Q, [date]) = 2 THEN 5
+				                         WHEN DATEPART(Q, [date]) = 3 THEN 5
+				                         WHEN DATEPART(Q, [date]) = 4 THEN 5 END
+				                WHEN [field] = 'PL 001B Ivar Aasen' AND YEAR([date]) = 2025 THEN 63
+				                WHEN [field] = 'PL 001B Ivar Aasen' AND YEAR([date]) = 2026 THEN 82
+				              END AS [Tillatelse Kaldvent]
+				        FROM [dbt_gold_nems_environment_kpi].[fact_nems__vent_gas_emissions_ctt]
+				        WHERE 
+				    fabric_valid_to_date = '9999-12-31 00:00:00.000000'
+				    ) t1
+				) t
+				WHERE [Year] > 2019
+				ORDER BY [Date] DESC;
+				"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Date", type date}}),
+				    #"Erstattet verdi" = Table.ReplaceValue(#"Changed Type"," ","",Replacer.ReplaceText,{"loc_key"}),
+				    #"Tekst med små bokstaver" = Table.TransformColumns(#"Erstattet verdi",{{"loc_key", Text.Lower, type text}}),
+				    #"Sorterte rader" = Table.Sort(#"Tekst med små bokstaver",{{"Date", Order.Descending}})
+				in
+				    #"Sorterte rader"
+				```
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigasjon
+

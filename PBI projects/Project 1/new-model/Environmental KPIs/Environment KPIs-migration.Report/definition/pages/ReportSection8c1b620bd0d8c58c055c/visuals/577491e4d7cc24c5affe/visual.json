@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "577491e4d7cc24c5affe",
+  "position": {
+    "x": 14.810873797426723,
+    "y": 213.45570839989543,
+    "z": 17000,
+    "height": 267.67295597484275,
+    "width": 470.94339622641508,
+    "tabOrder": 10000
+  },
+  "visualGroup": {
+    "displayName": "reinj",
+    "groupMode": "ScaleMode"
+  },
+  "isHidden": true
+}

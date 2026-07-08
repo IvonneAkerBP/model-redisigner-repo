@@ -1,0 +1,132 @@
+table Dim_Date
+	lineageTag: 49f3553e-f207-4678-9d86-edf5682e93a4
+
+	column Time_Id
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 21703e2f-dd1b-4696-9f46-c21099706a49
+		summarizeBy: none
+		sourceColumn: Time_Id
+
+		variation Variation
+			isDefault
+			relationship: dbb24099-c279-446b-a6e8-abc006b51562
+			defaultHierarchy: LocalDateTable_310cc86e-a4fb-4c5f-9c7a-899b34108c9b.Datohierarki
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year
+		dataType: string
+		lineageTag: 50dc7a5d-379e-4eda-b5cf-bf8b96a5e123
+		summarizeBy: none
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthName
+		dataType: string
+		lineageTag: 771baa92-61eb-467a-80ea-d6b61d760397
+		summarizeBy: none
+		sourceColumn: MonthName
+		sortByColumn: MonthNo
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthNo
+		dataType: int64
+		formatString: 0
+		lineageTag: 41f4dde0-bc67-44b5-a3b9-905c62df7fe4
+		summarizeBy: sum
+		sourceColumn: MonthNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column DayNo
+		dataType: string
+		lineageTag: ef3516e8-2b87-4d29-aa06-a4a9377e500c
+		summarizeBy: none
+		sourceColumn: DayNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column WeekNo_ISO
+		dataType: string
+		lineageTag: 222ac266-701f-488a-b65f-2cb86b17897a
+		summarizeBy: none
+		sourceColumn: WeekNo_ISO
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: dateTime
+		formatString: Short Date
+		lineageTag: 16f3c1f8-9e54-41da-aacf-3b74d541b650
+		summarizeBy: none
+		sourceColumn: Date
+
+		variation Variation
+			isDefault
+			relationship: 6f5d848f-9009-451d-84db-e0d5d5db1bbe
+			defaultHierarchy: LocalDateTable_c9eb5cc9-e889-46b0-aa6b-7908e4991b7f.Datohierarki
+
+		changedProperty = FormatString
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column MonthNameShort
+		dataType: string
+		lineageTag: 389843ac-d44f-42ac-85d1-f4cc7ce96903
+		summarizeBy: none
+		sourceColumn: MonthNameShort
+		sortByColumn: MonthNo
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Date-4d19ce95-a4fd-4b94-9b37-23e01590f465 = m
+		mode: import
+		queryGroup: Date
+		source = ```
+				let
+				    FabricServer   = "obax4o2iqosevp5oa2r6dbtune-2dhddioar5aebauc4huzjvnrve.datawarehouse.fabric.microsoft.com",
+				    FabricDatabase = "wh_gold_utilities",
+				
+				    Source = Sql.Database(
+				        FabricServer,
+				        FabricDatabase,
+				        [
+				            Query = "
+				                SELECT
+				                     d.[date]                                                AS [Time_Id]
+				                    ,d.[date]                                                AS [Date]
+				                    ,CAST(d.[weekday] AS varchar(10))                        AS [DayNo]        -- legacy expects text
+				                    ,CAST(d.[year]    AS varchar(4))                         AS [Year]         -- legacy expects text
+				                    ,d.[month_name]                                          AS [MonthName]
+				                    ,d.[month_name_short]                                    AS [MonthNameShort]
+				                    ,CAST(d.[month]   AS INT)                              AS [MonthNo]     
+				                    ,RIGHT('0' + CAST(DATEPART(ISO_WEEK, d.[date]) AS varchar(2)), 2) AS [WeekNo_ISO]  -- 01..53
+				                FROM [dbt_gold].[dim_dates] AS d
+				                WHERE d.[year] >= 2020
+				                  AND d.[date] < CAST(GETDATE() AS date)
+				            "
+				        ]
+				    ),
+				
+				    // keep your existing steps
+				    #"Changed Type"   = Table.TransformColumnTypes(Source, {{"Time_Id", type date}, {"Date", type date}}),
+				    #"Sorterte rader" = Table.Sort(#"Changed Type", {{"Time_Id", Order.Descending}})
+				in
+				    #"Sorterte rader"
+				```
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "addee6673d8d32150873",
+  "position": {
+    "x": 955.70212765957422,
+    "y": 612.55319148936189,
+    "z": 21000,
+    "height": 267.57446808510633,
+    "width": 471.82978723404335,
+    "tabOrder": 20000
+  },
+  "visualGroup": {
+    "displayName": "oild",
+    "groupMode": "ScaleMode"
+  },
+  "isHidden": true
+}

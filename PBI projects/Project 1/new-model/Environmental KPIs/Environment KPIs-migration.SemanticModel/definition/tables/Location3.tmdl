@@ -1,0 +1,174 @@
+table Location3
+	lineageTag: 8888b212-a4ce-4edb-9ff3-5b4ad99cb233
+
+	column Location
+		dataType: string
+		lineageTag: a2db1fa5-38a8-485f-a2cd-0e0ae7977ccd
+		summarizeBy: none
+		sourceColumn: Location
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Location - Copy'
+		dataType: string
+		lineageTag: a58ba376-ea58-4e37-a580-30f73a9fd8bc
+		summarizeBy: none
+		sourceColumn: Location - Copy
+
+		annotation SummarizationSetBy = Automatic
+
+	column Facility
+		dataType: string
+		lineageTag: d599973f-d130-4581-9c25-b75c0bdefd64
+		summarizeBy: none
+		sourceColumn: Facility
+
+		annotation SummarizationSetBy = Automatic
+
+	column År
+		dataType: int64
+		formatString: 0
+		lineageTag: 2431a074-e52f-4e46-95eb-a73da8cfedf2
+		summarizeBy: sum
+		sourceColumn: År
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Location3-c9a72882-825e-4342-9d08-318f20a1aca5 = m
+		mode: import
+		source = ```
+				let
+				    Source = Sql.Database(
+				        "obax4o2iqosevp5oa2r6dbtune-2dhddioar5aebauc4huzjvnrve.datawarehouse.fabric.microsoft.com",
+				        "wh_gold_hsseq",
+				        [Query = "
+				WITH base AS (
+				    SELECT
+				        CAST([date] AS date)               AS [Time_Id],
+				        
+				        CASE 
+				            WHEN RIGHT([business_area], 5) = ' Area' 
+				                THEN LEFT([business_area], LEN([business_area]) - 5)
+				            ELSE [business_area]
+				        END                                 AS [Asset],
+				
+				        -- Facility with prefix and NULL-safe concat
+				        CASE 
+				            WHEN [field] = 'Fenris' THEN 'Fenris/' + COALESCE(CAST([facility] AS nvarchar(200)), '')
+				            WHEN [field] = 'Hod'    THEN 'Hod/'    + COALESCE(CAST([facility] AS nvarchar(200)), '')
+				            ELSE COALESCE(CAST([facility] AS nvarchar(200)), '')
+				        END                                 AS [facility],
+				        -- Field normalization
+				        CASE 
+				            WHEN [field] = 'HANZ'   THEN 'Ivar Aasen'
+				            WHEN [field] = 'Fenris' THEN 'Valhall'
+				            WHEN [field] = 'Hod'    THEN 'Valhall'
+				            ELSE [field]
+				        END                                 AS [Field],
+				
+				        -- Normalize all metric NULLs to 0.0
+				        [stream_type]                                      AS [Stream Type],
+				        COALESCE([discharged_oil_mass_iso_mg],            0.0) AS [Discharged Oil Mass ISO (mg)],
+				        COALESCE([discharged_oil_concentration_iso_mg_l], 0.0) AS [Discharged Oil Concentration ISO],
+				        COALESCE([discharged_volume_m3],                  0.0) AS [Discharged Volume (L)],
+				        COALESCE([production_volume_m3],                  0.0) AS [Production Volume],
+				        COALESCE([injected_volume_m3],                    0.0) AS [Injected Volume]
+				    FROM [dbt_gold_nems_environment_kpi].[fact_nems__environment_kpi_oily_water_ctt]
+				    WHERE CAST([date] AS date) >= '2020-01-01'
+				      AND CAST([date] AS date) <= CAST(GETDATE() AS date) AND 
+				    fabric_valid_to_date = '9999-12-31 00:00:00.000000'
+				)
+				SELECT
+				    b.[Time_Id],
+				    b.[Asset],
+				    b.[facility],
+				    b.[Field],
+				    b.[Stream Type],
+				    b.[Discharged Oil Mass ISO (mg)],
+				    b.[Discharged Oil Concentration ISO],
+				    b.[Production Volume],
+				    b.[Injected Volume],
+				    b.[Discharged Volume (L)],
+				
+				    -- loc_key (kept for parity, even if you drop it later in M)
+				    CONCAT(TRIM(REPLACE(b.[Field], 'PL 001B', '')), '_', b.[facility], '_', YEAR(b.[Time_Id])) AS [loc_key],
+				
+				    -- KPIs
+				    [Tillatelser] = CASE 
+				        WHEN b.[Field] IN ('Valhall', 'Ula', 'Skarv', 'Alvheim', 'PL 001B Ivar Aasen', 'Edvard Grieg') THEN 30
+				        ELSE NULL 
+				    END,
+				
+				    [KPI Oil to sea] = CASE 
+				        WHEN b.[Field] = 'Valhall' AND YEAR(b.[Time_Id]) = 2020 THEN 12
+				        WHEN b.[Field] = 'Valhall' AND YEAR(b.[Time_Id]) = 2021 THEN 16
+				        WHEN b.[Field] = 'Valhall' AND YEAR(b.[Time_Id]) = 2022 THEN 16
+				        WHEN b.[Field] = 'Valhall' AND YEAR(b.[Time_Id]) > 2022 THEN 15
+				
+				        WHEN b.[Field] = 'Ula'     AND YEAR(b.[Time_Id]) = 2021 THEN 20
+				        WHEN b.[Field] = 'Ula'     AND YEAR(b.[Time_Id]) > 2021 AND YEAR(b.[Time_Id]) < 2024 THEN 25
+				        WHEN b.[Field] = 'Ula'     AND YEAR(b.[Time_Id]) > 2023 THEN 22.5
+				
+				        WHEN b.[Field] = 'Alvheim' AND YEAR(b.[Time_Id]) < 2021 THEN 25
+				        WHEN b.[Field] = 'Alvheim' AND YEAR(b.[Time_Id]) > 2020 THEN 20
+				
+				        WHEN b.[Field] = 'Skarv'   AND YEAR(b.[Time_Id]) < 2022 THEN 12
+				        WHEN b.[Field] = 'Skarv'   AND YEAR(b.[Time_Id]) >= 2022 AND YEAR(b.[Time_Id]) < 2024 THEN 15
+				        WHEN b.[Field] = 'Skarv'   AND YEAR(b.[Time_Id]) = 2024 THEN 12
+				
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) <= 2022 THEN 25
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) > 2022 THEN 15
+				
+				        WHEN b.[Field] = 'Edvard Grieg' AND YEAR(b.[Time_Id]) > 2020 THEN 25
+				        ELSE NULL
+				    END,
+				
+				    [KPI drain water] = CASE
+				        WHEN b.[Field] = 'Valhall'                                   THEN 12
+				        WHEN b.[Field] = 'Ula'     AND YEAR(b.[Time_Id]) = 2020       THEN 20
+				        WHEN b.[Field] = 'Ula'     AND YEAR(b.[Time_Id]) = 2021       THEN 15
+				        WHEN b.[Field] = 'Ula'     AND YEAR(b.[Time_Id]) > 2021       THEN 20
+				        WHEN b.[Field] = 'Alvheim' AND YEAR(b.[Time_Id]) < 2023       THEN 25
+				        WHEN b.[Field] = 'Alvheim' AND YEAR(b.[Time_Id]) = 2023       THEN 20
+				        WHEN b.[Field] = 'Skarv'                                       THEN 12
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) <= 2022 THEN 25
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) = 2023  THEN 20
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) = 2024  THEN 18
+				        WHEN b.[Field] = 'Edvard Grieg' AND YEAR(b.[Time_Id]) > 2020 AND YEAR(b.[Time_Id]) < 2023 THEN 25
+				        WHEN b.[Field] = 'Edvard Grieg' AND YEAR(b.[Time_Id]) > 2022 AND YEAR(b.[Time_Id]) < 2024 THEN 20
+				        WHEN b.[Field] = 'Edvard Grieg' AND YEAR(b.[Time_Id]) = 2024 THEN 15
+				        ELSE NULL 
+				    END,
+				
+				    [KPI water reinjected] = CASE 
+				        WHEN b.[Field] = 'Alvheim' AND YEAR(b.[Time_Id]) > 2020 AND YEAR(b.[Time_Id]) < 2024 THEN 0.9
+				        WHEN b.[Field] = 'Alvheim' AND YEAR(b.[Time_Id]) = 2024 THEN 0.95
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) < 2021 THEN 0.95
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) > 2020 AND YEAR(b.[Time_Id]) < 2023 THEN 0.97
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) > 2022 THEN 0.95
+				        WHEN b.[Field] = 'Edvard Grieg' AND YEAR(b.[Time_Id]) > 2020 AND YEAR(b.[Time_Id]) < 2024 THEN 0.95
+				        WHEN b.[Field] = 'Edvard Grieg' AND YEAR(b.[Time_Id]) = 2024 THEN 0.5
+				        ELSE NULL
+				    END
+				FROM base AS b;
+				        "]
+				    ),
+				
+				    // Same shaping steps you had
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Time_Id", type date}}),
+				    #"År satt inn" = Table.AddColumn(#"Changed Type", "År", each Date.Year([Time_Id]), Int64.Type),
+				    #"Andre kolonner fjernet" = Table.SelectColumns(#"År satt inn",{"Asset", "facility", "År"}),
+				    #"Kolonner med nye navn" = Table.RenameColumns(#"Andre kolonner fjernet",{{"Asset", "Location"}}),
+				    #"Duplisert kolonne" = Table.DuplicateColumn(#"Kolonner med nye navn", "Location", "Location - Kopier"),
+				    #"Omorganiserte kolonner" = Table.ReorderColumns(#"Duplisert kolonne",{"Location", "Location - Kopier", "facility"}),
+				    #"Kolonner med nye navn1" = Table.RenameColumns(#"Omorganiserte kolonner",{{"Location - Kopier", "Location - Copy"}, {"facility", "Facility"}}),
+				    #"Filtrerte rader" = Table.SelectRows(#"Kolonner med nye navn1", each true),
+				    #"Duplikater fjernet" = Table.Distinct(#"Filtrerte rader")
+				in
+				    #"Duplikater fjernet"
+				```
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigasjon
+

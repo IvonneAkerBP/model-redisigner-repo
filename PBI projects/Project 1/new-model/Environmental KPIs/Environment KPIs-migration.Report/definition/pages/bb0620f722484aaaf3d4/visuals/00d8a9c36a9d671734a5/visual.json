@@ -1,0 +1,532 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "00d8a9c36a9d671734a5",
+  "position": {
+    "x": 29.179331306990882,
+    "y": 64.194528875379945,
+    "z": 4000,
+    "height": 655.56231003039511,
+    "width": 1250.8206686930091,
+    "tabOrder": 4000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Data Ingestion Architecture — Environmental KPIs Semantic Model endring i juli 2026.",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Endring ansvarlig:  Ivonne Øvrebø."
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Model: Environment KPIs (PBIP format, TMDL)",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Data source: Microsoft Fabric SQL warehouse — wh_gold_hsseq at obax4o2iqosevp5oa2r6dbtune-2dhddioar5aebauc4huzjvnrve.datawarehouse.fabric.microsoft.com",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Refresh mode: Import (all tables)",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "1. Fact tables",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Each fact table is an imported table with a single Power Query partition. The partition sends a SQL query to the Fabric warehouse and then applies M transformations before loading into VertiPaq.",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Table\tFabric source table(s)\tKey columns\tNotes",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Emissions to air\tfact_nems__environment_kpi_emission_to_air_ctt (×2: main rows + Hod duplicate)\tCO2/NOx/CH4/nmVOC/SOx emissions, permit and KPI reference columns\tUNION of main measurement rows + a second pass for Hod field (mapped to Valhall). Reference columns KPI CO2 tonn, Permit nmVOC, KPI nmVOC sourced from CombinedAirRef via M join.",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "CH4_NMVOC\tfact_nems__hydrocarbon_gas_emissions_ctt (hydro) + fact_nems__environment_kpi_combustion_ctt (combustion)\tCH4 and nmVOC venting + combustion emissions; permit and KPI reference columns\tUNION of hydro (cold vent/common vent) and combustion rows. Reference columns Tillatelse CH4, KPI CH4, Tillatelse nmVOC, KPI nmVOC sourced from CombinedAirRef via M join.",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Kaldvent volum\tfact_nems__hydrocarbon_gas_emissions_ctt\tCold-vent gas volumes, quarterly permit and KPI\tQuarterly KPI computed via SQL CASE with division logic. Tillatelse Kaldvent and KPI Kaldvent QTD still SQL-derived (pending migration).",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Oily water\tfact_nems__environment_kpi_oily_water_ctt\tOil-to-sea and drainage water discharge metrics\tPermit and KPI columns (Tillatelser, KPI Oil to sea, KPI drain water, KPI water reinjected) still SQL-derived (pending migration).",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Radioaktive isotoper\tfact_nems__discharged_produced_water_analysis_radioactive_ctt\tRadioactive isotope activity (Ra226, Ra228, Pb-210)\tNo SQL CASE; isotope permits and KPIs added by Power Query Table.AddColumn using if/then/else logic (still pending migration).",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "2. Reference data architecture",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Permit and KPI reference values are managed through a four-query M expression architecture. All four are hidden from the field list and not loaded as visible model tables.",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Expression\tSource\tPurpose",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "HistoricalAirRef\tStatic M table literals (extracted from legacy SQL CASE logic)\tHistorical air emission permit and KPI values for 2019–2025, organised as named metric sub-tables",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "CombinedAirRef\tHistoricalAirRef + Fabric AIR_REF\tUnions historical and Fabric data into tall format, then pivots to wide format (one column per metric, one row per field × year). Used as the join target by Emissions to air and CH4_NMVOC",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "HistoricalSeaRef\tStatic M table literals (from legacy SQL CASE and M if/then/else)\tHistorical sea discharge permit and KPI values for 2019–2025",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "CombinedSeaRef\tHistoricalSeaRef + Fabric SEA_REF\tSame structure as CombinedAirRef, for Oily water and Radioaktive isotoper (join not yet implemented)",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "3. How a fact table joins to the reference table",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "At refresh time, the partition M query:",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Executes a SQL query against the Fabric warehouse → returns measurement rows (no reference CASE expressions in the SQL for migrated columns)",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Applies M transformations (field mapping, loc_key normalisation)",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Calls Table.NestedJoin to join the measurement table to CombinedAirRef on (field, year)",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Expands the selected metric columns from the nested join result into flat imported columns",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "The SQL join does not fold back to Fabric — the M-native data in HistoricalAirRef breaks the fold chain. The SQL step folds; the join executes in the Power Query engine.",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "4. Dimension and date tables",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Table\tSource\tNotes",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Location\tDerived from fact table loc_key columns\tMaps loc_key values to Facility and field groupings. Used for cross-filtering via report slicers.",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Location3\tDerived from Location\tExtended location dimension used on specific report pages.",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Dim_Date\tM-generated date table\tStandard calendar table; drives all date hierarchy slicers.",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "LocalDateTable_* (×4)\tAuto-generated by Power BI\tInternal auto date tables for individual date columns; hidden from the field list.",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Emissions to air CO2 Hod\tSubset of Emissions to air\tDedicated CO2 tracking for the Hod field; sourced from the same Fabric table with a Hod-specific filter.",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "AIR_REF / SEA_REF\tFabric fact_nems__permit_kpi_to_air / fact_nems__permit_kpi_to_sea\tVisible in model for direct querying. Schema: metric, field, year, value_permit_kpi. Currently contains 2026 data only. Used as the Fabric branch of CombinedAirRef/CombinedSeaRef.",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "5. Field name normalisation",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "All fact tables remap satellite/sub-field raw Fabric field names to their parent production field before the data reaches the model. Example mappings applied in SQL:",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Raw Fabric name\tMapped to\tTables where this applies",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "PL 001B Ivar Aasen\tIvar Aasen\tEmissions to air (SQL CASE), CH4_NMVOC (M _MappedField step), Kaldvent volum (SQL REPLACE), Oily water (SQL CASE), Radioaktive isotoper (M ReplaceValue)",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Fenris\tValhall\tEmissions to air, Oily water",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Tambar\tUla\tEmissions to air, Oily water",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "HANZ, Symra\tIvar Aasen\tEmissions to air",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Alve Nord, Idun Nord, Ørn\tSkarv\tEmissions to air",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Solveig\tEdvard Grieg\tEmissions to air",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Hod\tValhall\tEmissions to air (second UNION branch), CH4_NMVOC",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "After remapping, all field names in the model match the six main production fields used as join keys in CombinedAirRef and CombinedSeaRef.",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

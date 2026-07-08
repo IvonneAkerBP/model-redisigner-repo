@@ -1,0 +1,47 @@
+table 'dbt_gold_nems_emission fact_nems__permit_kpi_to_sea'
+	lineageTag: 4ecf7474-6cb5-4bbe-b00e-5f4daa5bbec1
+
+	column metric
+		dataType: string
+		lineageTag: b26a7d01-ee39-45e2-ace2-2499602291f2
+		summarizeBy: none
+		sourceColumn: metric
+
+		annotation SummarizationSetBy = Automatic
+
+	column field
+		dataType: string
+		lineageTag: 36935ea0-b1ff-4de6-8145-86f35accec9e
+		summarizeBy: none
+		sourceColumn: field
+
+		annotation SummarizationSetBy = Automatic
+
+	column year
+		dataType: int64
+		formatString: 0
+		lineageTag: f6f62e09-a50b-4712-ab89-29613c5dc5c8
+		summarizeBy: sum
+		sourceColumn: year
+
+		annotation SummarizationSetBy = Automatic
+
+	column value_permit_kpi
+		dataType: double
+		lineageTag: 73183cb4-9989-43c4-a57f-e97c5c6f8af6
+		summarizeBy: sum
+		sourceColumn: value_permit_kpi
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'dbt_gold_nems_emission fact_nems__permit_kpi_to_sea' = m
+		mode: import
+		source =
+				let
+				    Source = Sql.Database("obax4o2iqosevp5oa2r6dbtune-2dhddioar5aebauc4huzjvnrve.datawarehouse.fabric.microsoft.com", "wh_gold_hsseq"),
+				    dbt_gold_nems_emission_fact_nems__permit_kpi_to_sea = Source{[Schema="dbt_gold_nems_emission",Item="fact_nems__permit_kpi_to_sea"]}[Data]
+				in
+				    dbt_gold_nems_emission_fact_nems__permit_kpi_to_sea
+

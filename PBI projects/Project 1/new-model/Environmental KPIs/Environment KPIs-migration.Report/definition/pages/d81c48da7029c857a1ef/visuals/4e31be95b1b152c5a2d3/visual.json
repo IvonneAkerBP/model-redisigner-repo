@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "4e31be95b1b152c5a2d3",
+  "position": {
+    "x": 513.06414917009488,
+    "y": 669.72882567562783,
+    "z": 52015,
+    "height": 372.57142857142867,
+    "width": 470.85714285714278,
+    "tabOrder": 50000
+  },
+  "visualGroup": {
+    "displayName": "vent",
+    "groupMode": "ScaleMode"
+  },
+  "isHidden": true
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "6acc5f043e0c615124a3",
+  "position": {
+    "x": 1464.5089285714287,
+    "y": 668.97321428571433,
+    "z": 49500,
+    "height": 372.99802407041489,
+    "width": 480,
+    "tabOrder": 51000
+  },
+  "visualGroup": {
+    "displayName": "nmvocrig",
+    "groupMode": "ScaleMode"
+  },
+  "isHidden": true
+}

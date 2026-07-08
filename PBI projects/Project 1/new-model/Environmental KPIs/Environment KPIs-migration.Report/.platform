@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "Environment KPIs-migration"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "aae57f7c-06e1-4f15-bb85-072bf1e32b2e"
+  }
+}

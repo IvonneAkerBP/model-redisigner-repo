@@ -1,0 +1,290 @@
+table 'Radioaktive isotoper'
+	lineageTag: b4b12c8f-2419-441d-adc6-73609241e603
+
+	measure 'Component Activity (Bq) MTD' =
+			
+			IF(
+				ISFILTERED('Dim_Date'[Date]),
+				ERROR("Rask oppretting av mål for tidsintelligens kan bare grupperes eller filtreres etter datohierarkiet eller den primære datokolonnen levert av Power BI."),
+				TOTALMTD(
+					SUM('Radioaktive isotoper'[Component Activity (Bq)]),
+					'Dim_Date'[Date].[Date]
+				)
+			)/1000000000
+		formatString: 0.000
+		lineageTag: dcdc3ede-0619-49bf-869a-55ef95d79544
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "MonthToDate"
+				}
+
+		changedProperty = FormatString
+
+	measure 'Component Activity (Bq) YTD' =
+			
+			IF(
+				ISFILTERED('Dim_Date'[Date]),
+				ERROR("Rask oppretting av mål for tidsintelligens kan bare grupperes eller filtreres etter datohierarkiet eller den primære datokolonnen levert av Power BI."),
+				TOTALYTD(
+					SUM('Radioaktive isotoper'[Component Activity (Bq)]),
+					'Dim_Date'[Date].[Date]
+				)
+			)/1000000000
+		formatString: 0
+		lineageTag: 384093bd-92fe-4f11-83df-ad00f5bee366
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "YearToDate"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'KPI year' =
+			CALCULATE( MAX( 'Radioaktive isotoper'[Permits] ) * 0.9, ( 'Radioaktive isotoper'[Field] IN { "Valhall", "Ula", "Alvheim", "Skarv"} ) )
+			    + CALCULATE( MAX( 'Radioaktive isotoper'[Permits] ), NOT ( 'Radioaktive isotoper'[Field] IN { "Valhall", "Ula", "Alvheim", "Skarv" } ) )
+		formatString: 0.00
+		lineageTag: dbd70115-81f7-4fe3-8b49-1c3a835f0f88
+
+	column Date
+		dataType: dateTime
+		formatString: Short Date
+		lineageTag: c8d6abb0-949d-4d5e-bb3a-73cdbf3bb8f2
+		summarizeBy: none
+		sourceColumn: Date
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Update Date'
+		dataType: dateTime
+		formatString: Short Date
+		lineageTag: 3c8cb059-43d9-412a-881c-7904f240aacb
+		summarizeBy: none
+		sourceColumn: Update Date
+
+		variation Variasjon
+			isDefault
+			relationship: 84a9ae7d-3691-4482-9d00-cc1311dff0cc
+			defaultHierarchy: LocalDateTable_343e897d-4fc1-41b4-96ce-9acd5046d5ca.Datohierarki
+
+		changedProperty = DataType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Field
+		dataType: string
+		lineageTag: 15e24f12-447c-48fb-a502-b9d66d85d167
+		summarizeBy: none
+		sourceColumn: Field
+
+		annotation SummarizationSetBy = Automatic
+
+	column Facility
+		dataType: string
+		lineageTag: 363a5d8e-7b4e-4637-addb-02367f30c853
+		summarizeBy: none
+		sourceColumn: Facility
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Stream Type'
+		dataType: string
+		lineageTag: b6e80b08-b624-4e17-a4e9-824bb2e006cf
+		summarizeBy: none
+		sourceColumn: Stream Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Stream Subtype'
+		dataType: string
+		lineageTag: 4b82e0b8-b875-4798-98a5-2c19413f63b8
+		summarizeBy: none
+		sourceColumn: Stream Subtype
+
+		annotation SummarizationSetBy = Automatic
+
+	column Stream
+		dataType: string
+		lineageTag: 73550793-3790-4670-a524-8b3e3886a062
+		summarizeBy: none
+		sourceColumn: Stream
+
+		annotation SummarizationSetBy = Automatic
+
+	column Component
+		dataType: string
+		lineageTag: ef1618d5-0ae6-4377-991f-0f81851db294
+		summarizeBy: none
+		sourceColumn: Component
+
+		annotation SummarizationSetBy = Automatic
+
+	column Samples
+		dataType: int64
+		formatString: 0
+		lineageTag: 3685af58-4741-44a4-8e0c-8a40f62ca04a
+		summarizeBy: sum
+		sourceColumn: Samples
+
+		annotation SummarizationSetBy = Automatic
+
+	column loc_key
+		dataType: string
+		lineageTag: 05d09be5-d5b3-4c0a-a9ee-1d5cae99068c
+		summarizeBy: none
+		sourceColumn: loc_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: ab287367-0cd3-4c6f-9125-2c291973ba09
+		summarizeBy: sum
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Måned
+		dataType: int64
+		formatString: 0
+		lineageTag: e51a2153-35e1-4a14-8177-838104a5c9e1
+		summarizeBy: sum
+		sourceColumn: Måned
+
+		annotation SummarizationSetBy = Automatic
+
+	column Permits
+		dataType: double
+		formatString: 0.00
+		lineageTag: 675c20f7-bf09-4974-9ce8-ea90f3c385ef
+		summarizeBy: sum
+		sourceColumn: Permits
+
+		annotation SummarizationSetBy = Automatic
+
+	column KPIs
+		dataType: double
+		formatString: 0.00
+		lineageTag: e22c91e8-0b8f-4d4a-aa2b-5cc291a64fbb
+		summarizeBy: sum
+		sourceColumn: KPIs
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Component Activity (Bq)'
+		dataType: double
+		lineageTag: 49665a22-ad7b-40ed-a40c-f02f64fd2298
+		summarizeBy: sum
+		sourceColumn: Component Activity (Bq)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'Radioaktive isotoper' = m
+		mode: import
+		source = ```
+				let
+				    Source = Sql.Database(
+				        "obax4o2iqosevp5oa2r6dbtune-2dhddioar5aebauc4huzjvnrve.datawarehouse.fabric.microsoft.com",
+				        "wh_gold_hsseq",
+				    
+				    
+				    [Query="
+				        SELECT
+				    [date] AS [Date],
+				    [component_activity_bq] AS [component_activity_bq],
+				    [facility] AS [Facility],
+				    [field] AS [Field],
+				    [component] AS [Component],
+				    [stream] AS [Stream],
+				    [stream_type] AS [Stream Type],
+				    [stream_subtype] AS [Stream Subtype],
+				    [update_date] AS [Update Date],
+				    [samples] AS [Samples]
+				    
+				      
+				   
+				FROM 
+				    [dbt_gold_nems_environment_kpi].[fact_nems__discharged_produced_water_analysis_radioactive_ctt]
+				    
+				WHERE 
+				    fabric_valid_to_date = '9999-12-31 00:00:00.000000'
+				
+				    "]),
+				    #"Sorterte rader" = Table.Sort(Source,{{"Date", Order.Descending}}),
+				    #"Endret type" = Table.TransformColumnTypes(#"Sorterte rader",{{"Date", type date}, {"Update Date", type date}, {"Field", type text}, {"Facility", type text}, {"Stream Type", type text}, {"Stream Subtype", type text}, {"Stream", type text}, {"Component", type text}, {"component_activity_bq", type number}, {"Samples", Int64.Type}}),
+				    #"Kolonner med nye navn" = Table.RenameColumns(#"Endret type",{{"component_activity_bq", "Component Activity (Bq)"}}),
+				    #"Erstattet verdi" = Table.ReplaceValue(#"Kolonner med nye navn","PL 001B ","",Replacer.ReplaceText,{"Field"}),
+				    #"År satt inn1" = Table.AddColumn(#"Erstattet verdi", "År", each Date.Year([Date]), Int64.Type),
+				    #"Sammenslått kolonne satt inn1" = Table.AddColumn(#"År satt inn1", "loc_key", each Text.Combine({[Field], [Facility], Text.From([År], "nb-NO")}, "_"), type text),
+				    #"Tekst med små bokstaver" = Table.TransformColumns(#"Sammenslått kolonne satt inn1",{{"loc_key", Text.Lower, type text}}),
+				    #"Erstattet verdi1" = Table.ReplaceValue(#"Tekst med små bokstaver"," ","",Replacer.ReplaceText,{"loc_key"}),
+				    #"Måned satt inn" = Table.AddColumn(#"Erstattet verdi1", "Måned", each Date.Month([Date]), Int64.Type),
+				    #"Kolonner med nye navn1" = Table.RenameColumns(#"Måned satt inn",{{"År", "Year"}}),
+				    #"Egendefinert lagt til" = Table.AddColumn(#"Kolonner med nye navn1", "Permits", each if([Component] = "226Ra") then (
+				if ([Field] = "Ivar Aasen" and [Year] <2021) then (10)
+				else if ([Field] = "Ivar Aasen" and [Year] >2020) then (70)
+				else if ([Field] = "Skarv") then (2.676)
+				else if ([Field] = "Alvheim") then (11)
+				else if ([Field] = "Valhall") then (7.2)
+				else if ([Field] = "Ula" and [Year]>2020) then (90)
+				else if ([Field] = "Ula" and [Year]<2021) then (3.4)
+				else if ([Field] = "Ula" and [Year]=2026) then (90)
+				else if ([Field] = "Edvard Grieg" and [Year]>2020 and [Year]<2024) then (6)
+				else if ([Field] = "Edvard Grieg" and [Year]>2023 and [Year]<2025) then (16)
+				else if ([Field] = "Edvard Grieg" and [Year]=2025) then (20)
+				else if ([Field] = "Edvard Grieg" and [Year]=2026) then (16)
+				    else null)
+				else if([Component] = "228Ra") then (
+				    if ([Field] = "Ivar Aasen" and [Year]<2021) then (8.2)
+				else if ([Field] = "Ivar Aasen" and [Year]>2020) then (20)
+				else if ([Field] = "Skarv") then (2.23)
+				else if ([Field] = "Alvheim") then (12.9)
+				else if ([Field] = "Valhall") then (2.45)
+				else if ([Field] = "Ula" and [Year] > 2020) then (40)
+				else if ([Field] = "Ula" and [Year] < 2021) then (1.1)
+				else if ([Field] = "Ula" and [Year] = 2026) then (40)
+				else if ([Field] = "Edvard Grieg" and [Year] > 2020 and [Year]<2024) then (10)
+				else if ([Field] = "Edvard Grieg" and [Year]>2023 and [Year]<2026) then (36)
+				else if ([Field] = "Edvard Grieg" and [Year] = 2024) then (44)
+				else if ([Field] = "Edvard Grieg" and [Year] = 2026) then (36)
+				    else null
+				)
+				else if([Component] = "210Pb") then (
+				    if ([Field] = "Ivar Aasen" and [Year]<2021) then (0.4)
+				else if ([Field] = "Ivar Aasen" and [Year]>2020) then (0.42)
+				else if ([Field] = "Skarv") then (0.312)
+				else if ([Field] = "Alvheim") then (0.8)
+				else if ([Field] = "Valhall") then (0.8)
+				else if ([Field] = "Ula" and [Year] > 2020) then (4)
+				else if ([Field] = "Ula" and [Year] < 2021) then (0.2)
+				else if ([Field] = "Ula" and [Year] = 2026) then (4)
+				else if ([Field] = "Edvard Grieg" and [Year] > 2020 and [Year]<2024) then (0.2)
+				else if ([Field] = "Edvard Grieg" and [Year]>2023 and [Year]<2033) then (2)
+				else if ([Field] = "Edvard Grieg" and [Year] > 2024) then (3)
+				else if ([Field] = "Edvard Grieg" and [Year] = 2026) then (2)
+				else null
+				)
+				else null),
+				    #"Endret type1" = Table.TransformColumnTypes(#"Egendefinert lagt til",{{"Permits", type number}}),
+				    #"Egendefinert lagt til1" = Table.AddColumn(#"Endret type1", "KPIs", each if [Field] = "Ula" or [Field] = "Valhall" then 
+				([Permits]/12)*[Måned]*0.9
+				else ([Permits]/12)*[Måned]),
+				    #"Endret type2" = Table.TransformColumnTypes(#"Egendefinert lagt til1",{{"KPIs", type number}})
+				in
+				    #"Endret type2"
+				```
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigasjon
+

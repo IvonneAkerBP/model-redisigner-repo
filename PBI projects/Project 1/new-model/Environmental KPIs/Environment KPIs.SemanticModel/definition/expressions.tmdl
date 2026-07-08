@@ -1,12 +1,16 @@
-expression 'Location (2)' =
+expression 'Location (2)' = 
 		let
-		    Query2 = #"Oily water"[Field],
-		    #"Removed Duplicates" = List.Distinct(Query2),
-		    #"Converted to Table" = Table.FromList(#"Removed Duplicates", Splitter.SplitByNothing(), null, null, ExtraValues.Error),
-		    #"Renamed Columns" = Table.RenameColumns(#"Converted to Table",{{"Column1", "Location"}}),
-		    #"Replaced Value" = Table.ReplaceValue(#"Renamed Columns","PL 001B Ivar Aasen","Ivar Aasen",Replacer.ReplaceText,{"Location"})
+			Query2 = #"Oily water"[Field],
+			#"Removed Duplicates" = List.Distinct(Query2),
+			#"Converted to Table" = Table.FromList(
+				#"Removed Duplicates", Splitter.SplitByNothing(), null, null, ExtraValues.Error
+			),
+			#"Renamed Columns" = Table.RenameColumns(#"Converted to Table", {{"Column1", "Location"}}),
+			#"Replaced Value" = Table.ReplaceValue(
+				#"Renamed Columns", "PL 001B Ivar Aasen", "Ivar Aasen", Replacer.ReplaceText, {"Location"}
+			)
 		in
-		    #"Replaced Value"
+			#"Replaced Value"
 	lineageTag: 23c1d638-7821-4cea-9f51-b2c44fd0ad51
 
 	annotation PBI_NavigationStepName = Navigasjon
@@ -19,7 +23,7 @@ expression 'Location (2)' =
 /// Schema: (metric text, field text, year int64, value_permit_kpi number)
 /// Covers the years NOT provided by Fabric AIR_REF (which has 2026 only).
 /// Enable Load = false — used only as a source by CombinedAirRef.
-/// 
+///
 /// Known limitations documented in Preparation Completion Report:
 /// CO2 KPI Year — 2019–2024 values are the per-row constants from the legacy SQL,
 /// not annual tonnage targets. Valhall 2021 months 1–4 used 0.95; stored as 1.4.
@@ -27,730 +31,725 @@ expression 'Location (2)' =
 /// per (field, year). Only years with a clean annual value are included.
 /// Vented gas permit/KPI — same quarterly limitation; only clean annual years included.
 /// Ivar Aasen oily water metrics — NULL in legacy SQL due to field-name mapping bug.
-expression HistoricalAirRef =
+expression HistoricalAirRef = 
 		let
-		    // ==================================================================
-		    // CO2 KPI Year
-		    // Source: Emissions to air partition — column [KPI CO2 tonn]
-		    // Note: 2019–2024 store the legacy per-row constant (original units,
-		    //   not annual tonnage). 2025 stores the annual tonnage target.
-		    //   Valhall 2022/2023 = NULL in SQL (no CASE condition) — omitted.
-		    //   Edvard Grieg 2019–2021 = NULL in SQL — omitted.
-		    //   Valhall 2021: months 1–4 = 0.95, months 5–12 = 1.4; storing 1.4.
-		    // ==================================================================
-		    CO2_KPI_Year = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"CO2 KPI Year", "Valhall",      2020,    1.4   },
-		            {"CO2 KPI Year", "Valhall",      2021,    1.4   },
-		            {"CO2 KPI Year", "Valhall",      2024,    1.8   },
-		            {"CO2 KPI Year", "Valhall",      2025, 28000    },
-		            {"CO2 KPI Year", "Ula",          2020,   17.5   },
-		            {"CO2 KPI Year", "Ula",          2021,   19.15  },
-		            {"CO2 KPI Year", "Ula",          2022,   30     },
-		            {"CO2 KPI Year", "Ula",          2023,   29.5   },
-		            {"CO2 KPI Year", "Ula",          2024,   54.2   },
-		            {"CO2 KPI Year", "Ula",          2025, 153900   },
-		            {"CO2 KPI Year", "Skarv",        2019,   11.7   },
-		            {"CO2 KPI Year", "Skarv",        2020,   11.7   },
-		            {"CO2 KPI Year", "Skarv",        2021,    8     },
-		            {"CO2 KPI Year", "Skarv",        2022,    8     },
-		            {"CO2 KPI Year", "Skarv",        2023,    5.9   },
-		            {"CO2 KPI Year", "Skarv",        2024,    6.4   },
-		            {"CO2 KPI Year", "Skarv",        2025, 368000   },
-		            {"CO2 KPI Year", "Alvheim",      2020,    7     },
-		            {"CO2 KPI Year", "Alvheim",      2021,    8.5   },
-		            {"CO2 KPI Year", "Alvheim",      2022,    9.5   },
-		            {"CO2 KPI Year", "Alvheim",      2023,    9.5   },
-		            {"CO2 KPI Year", "Alvheim",      2024,    7.6   },
-		            {"CO2 KPI Year", "Alvheim",      2025, 171000   },
-		            {"CO2 KPI Year", "Ivar Aasen",   2020,    1     },
-		            {"CO2 KPI Year", "Ivar Aasen",   2021,    0.9   },
-		            {"CO2 KPI Year", "Ivar Aasen",   2022,    1     },
-		            {"CO2 KPI Year", "Ivar Aasen",   2023,    1.8   },
-		            {"CO2 KPI Year", "Ivar Aasen",   2024,    1.24  },
-		            {"CO2 KPI Year", "Ivar Aasen",   2025, 22000    },
-		            {"CO2 KPI Year", "Edvard Grieg", 2022,    5     },
-		            {"CO2 KPI Year", "Edvard Grieg", 2023,    1.7   },
-		            {"CO2 KPI Year", "Edvard Grieg", 2024,    1.14  },
-		            {"CO2 KPI Year", "Edvard Grieg", 2025, 45000    }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Flaring Permit
-		    // Source: Emissions to air partition — column [Tillatelse flaring]
-		    // The SQL stores QUARTERLY values for 2019–2024. These cannot be
-		    // represented per (field, year). Only years with a clean annual
-		    // value are included. Edvard Grieg 2023/2024 had annual figures.
-		    // 2019–2024 quarterly rows will show known differences in Phase A.
-		    // ==================================================================
-		    Flaring_Permit = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Flaring Permit", "Edvard Grieg", 2023,    54000   },
-		            {"Flaring Permit", "Edvard Grieg", 2024,  1300000   },
-		            {"Flaring Permit", "Edvard Grieg", 2025,  4711000   },
-		            {"Flaring Permit", "Ula",          2025,  5514000   },
-		            {"Flaring Permit", "Skarv",        2025,  3240000   },
-		            {"Flaring Permit", "Valhall",      2025,  3057000   },
-		            {"Flaring Permit", "Alvheim",      2025,  3000000   },
-		            {"Flaring Permit", "Ivar Aasen",   2025,  2375000   }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Flaring KPI
-		    // Source: Emissions to air partition — [KPI flaring] (annual basis)
-		    // Annual KPI = permit × reduction factor at year-end.
-		    // Edvard Grieg 2023/2024 used quarterly Division — omitted.
-		    // Calculation: Ula=5514000×0.8, Skarv=3240000×1.0, Valhall=3057000×0.9,
-		    //              Alvheim=3000000×1.0, Ivar Aasen=2375000×1.0, EG=4711000×1.0
-		    // ==================================================================
-		    Flaring_KPI = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Flaring KPI", "Ula",          2025,  4411200   },
-		            {"Flaring KPI", "Skarv",        2025,  3240000   },
-		            {"Flaring KPI", "Valhall",      2025,  2751300   },
-		            {"Flaring KPI", "Alvheim",      2025,  3000000   },
-		            {"Flaring KPI", "Ivar Aasen",   2025,  2375000   },
-		            {"Flaring KPI", "Edvard Grieg", 2025,  4711000   }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Mainfield NOX Permit
-		    // Source: Emissions to air partition — column [Tillatelse NOx]
-		    // Main field production platform rows (VALHALL PH, ULA PP,
-		    // Edvard Grieg facility, Skarv FPSO, Alvheim FPSO, Ivar Aasen facility)
-		    // ==================================================================
-		    Mainfield_NOX_Permit = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Mainfield NOX Permit", "Valhall",      2020,  320   },
-		            {"Mainfield NOX Permit", "Valhall",      2021,  320   },
-		            {"Mainfield NOX Permit", "Valhall",      2022,  320   },
-		            {"Mainfield NOX Permit", "Valhall",      2023,  320   },
-		            {"Mainfield NOX Permit", "Valhall",      2024,   75   },
-		            {"Mainfield NOX Permit", "Valhall",      2025,   75   },
-		            {"Mainfield NOX Permit", "Ula",          2020, 1159   },
-		            {"Mainfield NOX Permit", "Ula",          2021, 1159   },
-		            {"Mainfield NOX Permit", "Ula",          2022, 1159   },
-		            {"Mainfield NOX Permit", "Ula",          2023,  655   },
-		            {"Mainfield NOX Permit", "Ula",          2024,  655   },
-		            {"Mainfield NOX Permit", "Ula",          2025,  655   },
-		            {"Mainfield NOX Permit", "Edvard Grieg", 2020,  321   },
-		            {"Mainfield NOX Permit", "Edvard Grieg", 2021,  321   },
-		            {"Mainfield NOX Permit", "Edvard Grieg", 2022,  321   },
-		            {"Mainfield NOX Permit", "Edvard Grieg", 2023,  144   },
-		            {"Mainfield NOX Permit", "Edvard Grieg", 2024,   56   },
-		            {"Mainfield NOX Permit", "Edvard Grieg", 2025,   56   },
-		            {"Mainfield NOX Permit", "Skarv",        2020,  340   },
-		            {"Mainfield NOX Permit", "Skarv",        2021,  340   },
-		            {"Mainfield NOX Permit", "Skarv",        2022,  340   },
-		            {"Mainfield NOX Permit", "Skarv",        2023,  340   },
-		            {"Mainfield NOX Permit", "Skarv",        2024,  340   },
-		            {"Mainfield NOX Permit", "Skarv",        2025,  340   },
-		            {"Mainfield NOX Permit", "Alvheim",      2020,  360   },
-		            {"Mainfield NOX Permit", "Alvheim",      2021,  360   },
-		            {"Mainfield NOX Permit", "Alvheim",      2022,  360   },
-		            {"Mainfield NOX Permit", "Alvheim",      2023,  360   },
-		            {"Mainfield NOX Permit", "Alvheim",      2024,  360   },
-		            {"Mainfield NOX Permit", "Alvheim",      2025,  360   },
-		            {"Mainfield NOX Permit", "Ivar Aasen",   2020,  293   },
-		            {"Mainfield NOX Permit", "Ivar Aasen",   2021,  293   },
-		            {"Mainfield NOX Permit", "Ivar Aasen",   2022,  293   },
-		            {"Mainfield NOX Permit", "Ivar Aasen",   2023,  293   },
-		            {"Mainfield NOX Permit", "Ivar Aasen",   2024,  293   },
-		            {"Mainfield NOX Permit", "Ivar Aasen",   2025,  293   }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Mainfield NOX KPI
-		    // Source: Emissions to air partition — column [KPI NOx] (main field)
-		    // Annual KPI = permit × factor at year-end.
-		    // Valhall/Ula 2020–2022: no explicit SQL condition — omitted (NULL).
-		    // ==================================================================
-		    Mainfield_NOX_KPI = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Mainfield NOX KPI", "Valhall",      2023,   67.5  },
-		            {"Mainfield NOX KPI", "Valhall",      2024,   67.5  },
-		            {"Mainfield NOX KPI", "Valhall",      2025,   50    },
-		            {"Mainfield NOX KPI", "Ula",          2023,  589.5  },
-		            {"Mainfield NOX KPI", "Ula",          2024,  589.5  },
-		            {"Mainfield NOX KPI", "Ula",          2025,  589.5  },
-		            {"Mainfield NOX KPI", "Edvard Grieg", 2020,  321    },
-		            {"Mainfield NOX KPI", "Edvard Grieg", 2021,  321    },
-		            {"Mainfield NOX KPI", "Edvard Grieg", 2022,  321    },
-		            {"Mainfield NOX KPI", "Edvard Grieg", 2023,  144    },
-		            {"Mainfield NOX KPI", "Edvard Grieg", 2024,   56    },
-		            {"Mainfield NOX KPI", "Edvard Grieg", 2025,   56    },
-		            {"Mainfield NOX KPI", "Skarv",        2020,  340    },
-		            {"Mainfield NOX KPI", "Skarv",        2021,  340    },
-		            {"Mainfield NOX KPI", "Skarv",        2022,  340    },
-		            {"Mainfield NOX KPI", "Skarv",        2023,  340    },
-		            {"Mainfield NOX KPI", "Skarv",        2024,  340    },
-		            {"Mainfield NOX KPI", "Skarv",        2025,  340    },
-		            {"Mainfield NOX KPI", "Alvheim",      2020,  360    },
-		            {"Mainfield NOX KPI", "Alvheim",      2021,  360    },
-		            {"Mainfield NOX KPI", "Alvheim",      2022,  360    },
-		            {"Mainfield NOX KPI", "Alvheim",      2023,  360    },
-		            {"Mainfield NOX KPI", "Alvheim",      2024,  360    },
-		            {"Mainfield NOX KPI", "Alvheim",      2025,  360    },
-		            {"Mainfield NOX KPI", "Ivar Aasen",   2020,  293    },
-		            {"Mainfield NOX KPI", "Ivar Aasen",   2021,  293    },
-		            {"Mainfield NOX KPI", "Ivar Aasen",   2022,  293    },
-		            {"Mainfield NOX KPI", "Ivar Aasen",   2023,  293    },
-		            {"Mainfield NOX KPI", "Ivar Aasen",   2024,  293    },
-		            {"Mainfield NOX KPI", "Ivar Aasen",   2025,  293    }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Rig NOX Permit
-		    // Source: Emissions to air partition — column [Tillatelse NOx] (rigs)
-		    // Non-main-field facility rows (drilling rigs).
-		    // Ula rigs pre-2023: no SQL condition — omitted (NULL).
-		    // Hod A (Valhall satellite, permit=11) is not a drilling rig and
-		    //   is handled separately; the rig value here (780) applies to rigs.
-		    // ==================================================================
-		    Rig_NOX_Permit = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Rig NOX Permit", "Valhall",      2020,  780   },
-		            {"Rig NOX Permit", "Valhall",      2021,  780   },
-		            {"Rig NOX Permit", "Valhall",      2022,  780   },
-		            {"Rig NOX Permit", "Valhall",      2023,  780   },
-		            {"Rig NOX Permit", "Valhall",      2024,  780   },
-		            {"Rig NOX Permit", "Valhall",      2025,  780   },
-		            {"Rig NOX Permit", "Ula",          2023,  496   },
-		            {"Rig NOX Permit", "Ula",          2024,  496   },
-		            {"Rig NOX Permit", "Ula",          2025,  496   },
-		            {"Rig NOX Permit", "Edvard Grieg", 2020,  321   },
-		            {"Rig NOX Permit", "Edvard Grieg", 2021,  321   },
-		            {"Rig NOX Permit", "Edvard Grieg", 2022,  321   },
-		            {"Rig NOX Permit", "Edvard Grieg", 2023,  117   },
-		            {"Rig NOX Permit", "Edvard Grieg", 2024,  117   },
-		            {"Rig NOX Permit", "Edvard Grieg", 2025,  117   },
-		            {"Rig NOX Permit", "Skarv",        2020,  396   },
-		            {"Rig NOX Permit", "Skarv",        2021,  396   },
-		            {"Rig NOX Permit", "Skarv",        2022,  396   },
-		            {"Rig NOX Permit", "Skarv",        2023,  396   },
-		            {"Rig NOX Permit", "Skarv",        2024,  396   },
-		            {"Rig NOX Permit", "Skarv",        2025,  396   },
-		            {"Rig NOX Permit", "Alvheim",      2020,  662   },
-		            {"Rig NOX Permit", "Alvheim",      2021,  662   },
-		            {"Rig NOX Permit", "Alvheim",      2022,  662   },
-		            {"Rig NOX Permit", "Alvheim",      2023,  662   },
-		            {"Rig NOX Permit", "Alvheim",      2024,  662   },
-		            {"Rig NOX Permit", "Alvheim",      2025,  662   },
-		            {"Rig NOX Permit", "Ivar Aasen",   2020,   66   },
-		            {"Rig NOX Permit", "Ivar Aasen",   2021,   66   },
-		            {"Rig NOX Permit", "Ivar Aasen",   2022,   66   },
-		            {"Rig NOX Permit", "Ivar Aasen",   2023,  170   },
-		            {"Rig NOX Permit", "Ivar Aasen",   2024,  170   },
-		            {"Rig NOX Permit", "Ivar Aasen",   2025,  170   }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Rig NOX KPI
-		    // Source: Emissions to air partition — column [KPI NOx] (rig rows)
-		    // Annual KPI = permit × factor at year-end.
-		    // Valhall rig/Ula rig pre-2023: no SQL condition — omitted (NULL).
-		    // Alvheim rig 2025: 200 (explicit override in SQL).
-		    // ==================================================================
-		    Rig_NOX_KPI = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Rig NOX KPI", "Valhall",      2023,  702    },
-		            {"Rig NOX KPI", "Valhall",      2024,  702    },
-		            {"Rig NOX KPI", "Valhall",      2025,  100    },
-		            {"Rig NOX KPI", "Ula",          2023,  446.4  },
-		            {"Rig NOX KPI", "Ula",          2024,  446.4  },
-		            {"Rig NOX KPI", "Ula",          2025,  446.4  },
-		            {"Rig NOX KPI", "Edvard Grieg", 2020,  321    },
-		            {"Rig NOX KPI", "Edvard Grieg", 2021,  321    },
-		            {"Rig NOX KPI", "Edvard Grieg", 2022,  321    },
-		            {"Rig NOX KPI", "Edvard Grieg", 2023,  117    },
-		            {"Rig NOX KPI", "Edvard Grieg", 2024,  117    },
-		            {"Rig NOX KPI", "Edvard Grieg", 2025,  117    },
-		            {"Rig NOX KPI", "Skarv",        2020,  396    },
-		            {"Rig NOX KPI", "Skarv",        2021,  396    },
-		            {"Rig NOX KPI", "Skarv",        2022,  396    },
-		            {"Rig NOX KPI", "Skarv",        2023,  396    },
-		            {"Rig NOX KPI", "Skarv",        2024,  396    },
-		            {"Rig NOX KPI", "Skarv",        2025,  396    },
-		            {"Rig NOX KPI", "Alvheim",      2020,  662    },
-		            {"Rig NOX KPI", "Alvheim",      2021,  662    },
-		            {"Rig NOX KPI", "Alvheim",      2022,  662    },
-		            {"Rig NOX KPI", "Alvheim",      2023,  662    },
-		            {"Rig NOX KPI", "Alvheim",      2024,  662    },
-		            {"Rig NOX KPI", "Alvheim",      2025,  200    },
-		            {"Rig NOX KPI", "Ivar Aasen",   2023,  170    },
-		            {"Rig NOX KPI", "Ivar Aasen",   2024,  170    },
-		            {"Rig NOX KPI", "Ivar Aasen",   2025,  170    }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Mainfield nmVOC Permit
-		    // Source: Emissions to air partition — column [Permit nmVOC]
-		    // Note: The legacy SQL has `WHEN Field='Edvard Grieg' THEN 127` which
-		    //   catches ALL EG rows. The intended rig value (19) is dead code.
-		    //   Storing 127 as the value the legacy model actually produces for EG.
-		    //   Skarv FPSO 2025: no explicit SQL condition → NULL, omitted.
-		    // ==================================================================
-		    Mainfield_nmVOC_Permit = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Mainfield nmVOC Permit", "Valhall",      2020,  81     },
-		            {"Mainfield nmVOC Permit", "Valhall",      2021,  81     },
-		            {"Mainfield nmVOC Permit", "Valhall",      2022,  81     },
-		            {"Mainfield nmVOC Permit", "Valhall",      2023,  81     },
-		            {"Mainfield nmVOC Permit", "Valhall",      2024,  81     },
-		            {"Mainfield nmVOC Permit", "Valhall",      2025,  81     },
-		            {"Mainfield nmVOC Permit", "Ula",          2020, 195     },
-		            {"Mainfield nmVOC Permit", "Ula",          2021, 195     },
-		            {"Mainfield nmVOC Permit", "Ula",          2022, 195     },
-		            {"Mainfield nmVOC Permit", "Ula",          2023, 195     },
-		            {"Mainfield nmVOC Permit", "Ula",          2024, 195     },
-		            {"Mainfield nmVOC Permit", "Ula",          2025, 195     },
-		            {"Mainfield nmVOC Permit", "Edvard Grieg", 2020, 127     },
-		            {"Mainfield nmVOC Permit", "Edvard Grieg", 2021, 127     },
-		            {"Mainfield nmVOC Permit", "Edvard Grieg", 2022, 127     },
-		            {"Mainfield nmVOC Permit", "Edvard Grieg", 2023, 127     },
-		            {"Mainfield nmVOC Permit", "Edvard Grieg", 2024, 127     },
-		            {"Mainfield nmVOC Permit", "Edvard Grieg", 2025, 127     },
-		            {"Mainfield nmVOC Permit", "Skarv",        2020,  21.8   },
-		            {"Mainfield nmVOC Permit", "Skarv",        2021,  21.8   },
-		            {"Mainfield nmVOC Permit", "Skarv",        2022,  21.8   },
-		            {"Mainfield nmVOC Permit", "Skarv",        2023,  21.8   },
-		            {"Mainfield nmVOC Permit", "Skarv",        2024,  21.8   },
-		            {"Mainfield nmVOC Permit", "Alvheim",      2020,  62     },
-		            {"Mainfield nmVOC Permit", "Alvheim",      2021,  62     },
-		            {"Mainfield nmVOC Permit", "Alvheim",      2022,  62     },
-		            {"Mainfield nmVOC Permit", "Alvheim",      2023,  62     },
-		            {"Mainfield nmVOC Permit", "Alvheim",      2024,  62     },
-		            {"Mainfield nmVOC Permit", "Alvheim",      2025, 162     },
-		            {"Mainfield nmVOC Permit", "Ivar Aasen",   2020,   9     },
-		            {"Mainfield nmVOC Permit", "Ivar Aasen",   2021,   9     },
-		            {"Mainfield nmVOC Permit", "Ivar Aasen",   2022,   9     },
-		            {"Mainfield nmVOC Permit", "Ivar Aasen",   2023,   9     },
-		            {"Mainfield nmVOC Permit", "Ivar Aasen",   2024,   9     },
-		            {"Mainfield nmVOC Permit", "Ivar Aasen",   2025,   9     }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Mainfield nmVOC KPI
-		    // Source: Emissions to air partition — column [KPI nmVOC] (main field)
-		    // Annual KPI = permit for most fields/years (ELSE clause).
-		    // Overrides: Valhall 2024+: ×0.9; Alvheim 2024+: 100; Skarv 2024: 40.
-		    // ==================================================================
-		    Mainfield_nmVOC_KPI = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Mainfield nmVOC KPI", "Valhall",      2020,  81     },
-		            {"Mainfield nmVOC KPI", "Valhall",      2021,  81     },
-		            {"Mainfield nmVOC KPI", "Valhall",      2022,  81     },
-		            {"Mainfield nmVOC KPI", "Valhall",      2023,  81     },
-		            {"Mainfield nmVOC KPI", "Valhall",      2024,  72.9   },
-		            {"Mainfield nmVOC KPI", "Valhall",      2025,  72.9   },
-		            {"Mainfield nmVOC KPI", "Ula",          2020, 195     },
-		            {"Mainfield nmVOC KPI", "Ula",          2021, 195     },
-		            {"Mainfield nmVOC KPI", "Ula",          2022, 195     },
-		            {"Mainfield nmVOC KPI", "Ula",          2023, 195     },
-		            {"Mainfield nmVOC KPI", "Ula",          2024, 195     },
-		            {"Mainfield nmVOC KPI", "Ula",          2025, 195     },
-		            {"Mainfield nmVOC KPI", "Edvard Grieg", 2020, 127     },
-		            {"Mainfield nmVOC KPI", "Edvard Grieg", 2021, 127     },
-		            {"Mainfield nmVOC KPI", "Edvard Grieg", 2022, 127     },
-		            {"Mainfield nmVOC KPI", "Edvard Grieg", 2023, 127     },
-		            {"Mainfield nmVOC KPI", "Edvard Grieg", 2024, 127     },
-		            {"Mainfield nmVOC KPI", "Edvard Grieg", 2025, 127     },
-		            {"Mainfield nmVOC KPI", "Skarv",        2020,  21.8   },
-		            {"Mainfield nmVOC KPI", "Skarv",        2021,  21.8   },
-		            {"Mainfield nmVOC KPI", "Skarv",        2022,  21.8   },
-		            {"Mainfield nmVOC KPI", "Skarv",        2023,  21.8   },
-		            {"Mainfield nmVOC KPI", "Skarv",        2024,  40     },
-		            {"Mainfield nmVOC KPI", "Alvheim",      2020,  62     },
-		            {"Mainfield nmVOC KPI", "Alvheim",      2021,  62     },
-		            {"Mainfield nmVOC KPI", "Alvheim",      2022,  62     },
-		            {"Mainfield nmVOC KPI", "Alvheim",      2023,  62     },
-		            {"Mainfield nmVOC KPI", "Alvheim",      2024, 100     },
-		            {"Mainfield nmVOC KPI", "Alvheim",      2025, 100     },
-		            {"Mainfield nmVOC KPI", "Ivar Aasen",   2020,   9     },
-		            {"Mainfield nmVOC KPI", "Ivar Aasen",   2021,   9     },
-		            {"Mainfield nmVOC KPI", "Ivar Aasen",   2022,   9     },
-		            {"Mainfield nmVOC KPI", "Ivar Aasen",   2023,   9     },
-		            {"Mainfield nmVOC KPI", "Ivar Aasen",   2024,   9     },
-		            {"Mainfield nmVOC KPI", "Ivar Aasen",   2025,   9     }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Rig nmVOC Permit
-		    // Source: Emissions to air partition — column [Permit nmVOC] (rig rows)
-		    // Note: EG, Ula, Alvheim have no facility distinction in legacy SQL;
-		    //   all rows (including rigs) get the same field-level value.
-		    //   Valhall rigs: 90. Ivar Aasen rigs: 21.
-		    // ==================================================================
-		    Rig_nmVOC_Permit = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Rig nmVOC Permit", "Valhall",      2020,  90     },
-		            {"Rig nmVOC Permit", "Valhall",      2021,  90     },
-		            {"Rig nmVOC Permit", "Valhall",      2022,  90     },
-		            {"Rig nmVOC Permit", "Valhall",      2023,  90     },
-		            {"Rig nmVOC Permit", "Valhall",      2024,  90     },
-		            {"Rig nmVOC Permit", "Valhall",      2025,  90     },
-		            {"Rig nmVOC Permit", "Ula",          2020, 195     },
-		            {"Rig nmVOC Permit", "Ula",          2021, 195     },
-		            {"Rig nmVOC Permit", "Ula",          2022, 195     },
-		            {"Rig nmVOC Permit", "Ula",          2023, 195     },
-		            {"Rig nmVOC Permit", "Ula",          2024, 195     },
-		            {"Rig nmVOC Permit", "Ula",          2025, 195     },
-		            {"Rig nmVOC Permit", "Edvard Grieg", 2020, 127     },
-		            {"Rig nmVOC Permit", "Edvard Grieg", 2021, 127     },
-		            {"Rig nmVOC Permit", "Edvard Grieg", 2022, 127     },
-		            {"Rig nmVOC Permit", "Edvard Grieg", 2023, 127     },
-		            {"Rig nmVOC Permit", "Edvard Grieg", 2024, 127     },
-		            {"Rig nmVOC Permit", "Edvard Grieg", 2025, 127     },
-		            {"Rig nmVOC Permit", "Skarv",        2020,  45     },
-		            {"Rig nmVOC Permit", "Skarv",        2021,  45     },
-		            {"Rig nmVOC Permit", "Skarv",        2022,  45     },
-		            {"Rig nmVOC Permit", "Skarv",        2023,  45     },
-		            {"Rig nmVOC Permit", "Skarv",        2024,  45     },
-		            {"Rig nmVOC Permit", "Skarv",        2025,  40     },
-		            {"Rig nmVOC Permit", "Alvheim",      2020,  62     },
-		            {"Rig nmVOC Permit", "Alvheim",      2021,  62     },
-		            {"Rig nmVOC Permit", "Alvheim",      2022,  62     },
-		            {"Rig nmVOC Permit", "Alvheim",      2023,  62     },
-		            {"Rig nmVOC Permit", "Alvheim",      2024,  62     },
-		            {"Rig nmVOC Permit", "Alvheim",      2025, 162     },
-		            {"Rig nmVOC Permit", "Ivar Aasen",   2020,  21     },
-		            {"Rig nmVOC Permit", "Ivar Aasen",   2021,  21     },
-		            {"Rig nmVOC Permit", "Ivar Aasen",   2022,  21     },
-		            {"Rig nmVOC Permit", "Ivar Aasen",   2023,  21     },
-		            {"Rig nmVOC Permit", "Ivar Aasen",   2024,  21     },
-		            {"Rig nmVOC Permit", "Ivar Aasen",   2025,  21     }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Rig nmVOC KPI
-		    // Source: Emissions to air partition — column [KPI nmVOC] (rig rows)
-		    // Annual KPI = permit via ELSE clause or specific override.
-		    // Valhall 2024+: ×0.9; Alvheim 2024+: 100; Skarv 2024+: 40.
-		    // ==================================================================
-		    Rig_nmVOC_KPI = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Rig nmVOC KPI", "Valhall",      2020,  90     },
-		            {"Rig nmVOC KPI", "Valhall",      2021,  90     },
-		            {"Rig nmVOC KPI", "Valhall",      2022,  90     },
-		            {"Rig nmVOC KPI", "Valhall",      2023,  90     },
-		            {"Rig nmVOC KPI", "Valhall",      2024,  81     },
-		            {"Rig nmVOC KPI", "Valhall",      2025,  81     },
-		            {"Rig nmVOC KPI", "Ula",          2020, 195     },
-		            {"Rig nmVOC KPI", "Ula",          2021, 195     },
-		            {"Rig nmVOC KPI", "Ula",          2022, 195     },
-		            {"Rig nmVOC KPI", "Ula",          2023, 195     },
-		            {"Rig nmVOC KPI", "Ula",          2024, 195     },
-		            {"Rig nmVOC KPI", "Ula",          2025, 195     },
-		            {"Rig nmVOC KPI", "Edvard Grieg", 2020, 127     },
-		            {"Rig nmVOC KPI", "Edvard Grieg", 2021, 127     },
-		            {"Rig nmVOC KPI", "Edvard Grieg", 2022, 127     },
-		            {"Rig nmVOC KPI", "Edvard Grieg", 2023, 127     },
-		            {"Rig nmVOC KPI", "Edvard Grieg", 2024, 127     },
-		            {"Rig nmVOC KPI", "Edvard Grieg", 2025, 127     },
-		            {"Rig nmVOC KPI", "Skarv",        2020,  45     },
-		            {"Rig nmVOC KPI", "Skarv",        2021,  45     },
-		            {"Rig nmVOC KPI", "Skarv",        2022,  45     },
-		            {"Rig nmVOC KPI", "Skarv",        2023,  45     },
-		            {"Rig nmVOC KPI", "Skarv",        2024,  40     },
-		            {"Rig nmVOC KPI", "Skarv",        2025,  40     },
-		            {"Rig nmVOC KPI", "Alvheim",      2020,  62     },
-		            {"Rig nmVOC KPI", "Alvheim",      2021,  62     },
-		            {"Rig nmVOC KPI", "Alvheim",      2022,  62     },
-		            {"Rig nmVOC KPI", "Alvheim",      2023,  62     },
-		            {"Rig nmVOC KPI", "Alvheim",      2024, 100     },
-		            {"Rig nmVOC KPI", "Alvheim",      2025, 100     },
-		            {"Rig nmVOC KPI", "Ivar Aasen",   2020,  21     },
-		            {"Rig nmVOC KPI", "Ivar Aasen",   2021,  21     },
-		            {"Rig nmVOC KPI", "Ivar Aasen",   2022,  21     },
-		            {"Rig nmVOC KPI", "Ivar Aasen",   2023,  21     },
-		            {"Rig nmVOC KPI", "Ivar Aasen",   2024,  21     },
-		            {"Rig nmVOC KPI", "Ivar Aasen",   2025,  21     }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // MainField CH4 permit
-		    // Source: CH4_NMVOC partition — column [Tillatelse CH4]
-		    // Field-level annual values (CH4_NMVOC tracks vented/combustion gas).
-		    // Ula pre-2023: no SQL CASE condition — omitted (NULL).
-		    // Alvheim: <2026 = 315 (formula: <2026 THEN 315, >=2026 THEN 200).
-		    // Valhall: <2025 = 20, >2024 = 49.
-		    // ==================================================================
-		    MainField_CH4_Permit = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"MainField CH4 permit", "Ivar Aasen",   2019,  56    },
-		            {"MainField CH4 permit", "Ivar Aasen",   2020,  56    },
-		            {"MainField CH4 permit", "Ivar Aasen",   2021,  56    },
-		            {"MainField CH4 permit", "Ivar Aasen",   2022,  56    },
-		            {"MainField CH4 permit", "Ivar Aasen",   2023,  56    },
-		            {"MainField CH4 permit", "Ivar Aasen",   2024,  56    },
-		            {"MainField CH4 permit", "Ivar Aasen",   2025,  56    },
-		            {"MainField CH4 permit", "Skarv",        2019,  80    },
-		            {"MainField CH4 permit", "Skarv",        2020,  80    },
-		            {"MainField CH4 permit", "Skarv",        2021,  80    },
-		            {"MainField CH4 permit", "Skarv",        2022,  80    },
-		            {"MainField CH4 permit", "Skarv",        2023,  80    },
-		            {"MainField CH4 permit", "Skarv",        2024,  80    },
-		            {"MainField CH4 permit", "Skarv",        2025,  80    },
-		            {"MainField CH4 permit", "Alvheim",      2019, 315    },
-		            {"MainField CH4 permit", "Alvheim",      2020, 315    },
-		            {"MainField CH4 permit", "Alvheim",      2021, 315    },
-		            {"MainField CH4 permit", "Alvheim",      2022, 315    },
-		            {"MainField CH4 permit", "Alvheim",      2023, 315    },
-		            {"MainField CH4 permit", "Alvheim",      2024, 315    },
-		            {"MainField CH4 permit", "Alvheim",      2025, 315    },
-		            {"MainField CH4 permit", "Valhall",      2019,  20    },
-		            {"MainField CH4 permit", "Valhall",      2020,  20    },
-		            {"MainField CH4 permit", "Valhall",      2021,  20    },
-		            {"MainField CH4 permit", "Valhall",      2022,  20    },
-		            {"MainField CH4 permit", "Valhall",      2023,  20    },
-		            {"MainField CH4 permit", "Valhall",      2024,  20    },
-		            {"MainField CH4 permit", "Valhall",      2025,  49    },
-		            {"MainField CH4 permit", "Edvard Grieg", 2019, 132    },
-		            {"MainField CH4 permit", "Edvard Grieg", 2020, 132    },
-		            {"MainField CH4 permit", "Edvard Grieg", 2021, 132    },
-		            {"MainField CH4 permit", "Edvard Grieg", 2022, 132    },
-		            {"MainField CH4 permit", "Edvard Grieg", 2023, 132    },
-		            {"MainField CH4 permit", "Edvard Grieg", 2024, 132    },
-		            {"MainField CH4 permit", "Edvard Grieg", 2025, 132    },
-		            {"MainField CH4 permit", "Ula",          2023, 195    },
-		            {"MainField CH4 permit", "Ula",          2024, 195    },
-		            {"MainField CH4 permit", "Ula",          2025, 260    }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // MainField CH4 KPI
-		    // Source: CH4_NMVOC partition — column [KPI CH4]
-		    // Annual KPI = permit × factor at year-end.
-		    // Edvard Grieg 2023–2025: explicit 100 override in SQL (not permit-based).
-		    // Valhall 2025: 49 × 0.9 = 44.1. Ula 2024–2025: 195/260 × 0.9.
-		    // ==================================================================
-		    MainField_CH4_KPI = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"MainField CH4 KPI", "Ivar Aasen",   2019,  56     },
-		            {"MainField CH4 KPI", "Ivar Aasen",   2020,  56     },
-		            {"MainField CH4 KPI", "Ivar Aasen",   2021,  56     },
-		            {"MainField CH4 KPI", "Ivar Aasen",   2022,  56     },
-		            {"MainField CH4 KPI", "Ivar Aasen",   2023,  56     },
-		            {"MainField CH4 KPI", "Ivar Aasen",   2024,  56     },
-		            {"MainField CH4 KPI", "Ivar Aasen",   2025,  56     },
-		            {"MainField CH4 KPI", "Skarv",        2019,  80     },
-		            {"MainField CH4 KPI", "Skarv",        2020,  80     },
-		            {"MainField CH4 KPI", "Skarv",        2021,  80     },
-		            {"MainField CH4 KPI", "Skarv",        2022,  80     },
-		            {"MainField CH4 KPI", "Skarv",        2023,  80     },
-		            {"MainField CH4 KPI", "Skarv",        2024,  80     },
-		            {"MainField CH4 KPI", "Skarv",        2025,  80     },
-		            {"MainField CH4 KPI", "Alvheim",      2019, 315     },
-		            {"MainField CH4 KPI", "Alvheim",      2020, 315     },
-		            {"MainField CH4 KPI", "Alvheim",      2021, 315     },
-		            {"MainField CH4 KPI", "Alvheim",      2022, 315     },
-		            {"MainField CH4 KPI", "Alvheim",      2023, 315     },
-		            {"MainField CH4 KPI", "Alvheim",      2024, 315     },
-		            {"MainField CH4 KPI", "Alvheim",      2025, 315     },
-		            {"MainField CH4 KPI", "Valhall",      2019,  20     },
-		            {"MainField CH4 KPI", "Valhall",      2020,  20     },
-		            {"MainField CH4 KPI", "Valhall",      2021,  20     },
-		            {"MainField CH4 KPI", "Valhall",      2022,  20     },
-		            {"MainField CH4 KPI", "Valhall",      2023,  20     },
-		            {"MainField CH4 KPI", "Valhall",      2024,  20     },
-		            {"MainField CH4 KPI", "Valhall",      2025,  44.1   },
-		            {"MainField CH4 KPI", "Edvard Grieg", 2019, 132     },
-		            {"MainField CH4 KPI", "Edvard Grieg", 2020, 132     },
-		            {"MainField CH4 KPI", "Edvard Grieg", 2021, 132     },
-		            {"MainField CH4 KPI", "Edvard Grieg", 2022, 132     },
-		            {"MainField CH4 KPI", "Edvard Grieg", 2023, 100     },
-		            {"MainField CH4 KPI", "Edvard Grieg", 2024, 100     },
-		            {"MainField CH4 KPI", "Edvard Grieg", 2025, 100     },
-		            {"MainField CH4 KPI", "Ula",          2023, 195     },
-		            {"MainField CH4 KPI", "Ula",          2024, 175.5   },
-		            {"MainField CH4 KPI", "Ula",          2025, 234     }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Vented gas permit
-		    // Source: Kaldvent volum partition — column [Tillatelse Kaldvent]
-		    // Only years with a single annual value per (field, year) are included.
-		    // Quarterly variations (Alvheim 2020/2021/2023, EG 2022, IA 2023/2024)
-		    // and missing fields (Valhall, Ula pre-2026) are omitted.
-		    // ==================================================================
-		    Vented_Gas_Permit = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Vented gas permit", "Alvheim",      2022,  100    },
-		            {"Vented gas permit", "Alvheim",      2024,  100    },
-		            {"Vented gas permit", "Alvheim",      2025,  263    },
-		            {"Vented gas permit", "Skarv",        2020,   12    },
-		            {"Vented gas permit", "Skarv",        2021,   23    },
-		            {"Vented gas permit", "Skarv",        2022,   20    },
-		            {"Vented gas permit", "Skarv",        2023,   25    },
-		            {"Vented gas permit", "Skarv",        2024,   25    },
-		            {"Vented gas permit", "Skarv",        2025,   40    },
-		            {"Vented gas permit", "Edvard Grieg", 2023,   54    },
-		            {"Vented gas permit", "Edvard Grieg", 2024,   45    },
-		            {"Vented gas permit", "Edvard Grieg", 2025,   45    },
-		            {"Vented gas permit", "Ivar Aasen",   2020,   18    },
-		            {"Vented gas permit", "Ivar Aasen",   2021,   18    },
-		            {"Vented gas permit", "Ivar Aasen",   2022,   27    },
-		            {"Vented gas permit", "Ivar Aasen",   2025,   63    }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Vented gas KPI
-		    // Source: Kaldvent volum partition — column [KPI Kaldvent QTD]
-		    // Annual year-end KPI values where directly determinable.
-		    // EG 2023: quarterly override = 40/3 × 3 = 40 at Dec year-end.
-		    // EG 2024: Division = Tillatelse/3 = 45/3 = 15; KPI at Dec = 15×3 = 45.
-		    // ==================================================================
-		    Vented_Gas_KPI = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Vented gas KPI", "Alvheim",      2022, 100     },
-		            {"Vented gas KPI", "Alvheim",      2024, 100     },
-		            {"Vented gas KPI", "Alvheim",      2025, 263     },
-		            {"Vented gas KPI", "Skarv",        2020,  12     },
-		            {"Vented gas KPI", "Skarv",        2021,  23     },
-		            {"Vented gas KPI", "Skarv",        2022,  20     },
-		            {"Vented gas KPI", "Skarv",        2023,  25     },
-		            {"Vented gas KPI", "Skarv",        2024,  25     },
-		            {"Vented gas KPI", "Skarv",        2025,  40     },
-		            {"Vented gas KPI", "Edvard Grieg", 2023,  40     },
-		            {"Vented gas KPI", "Edvard Grieg", 2024,  45     },
-		            {"Vented gas KPI", "Edvard Grieg", 2025,  45     },
-		            {"Vented gas KPI", "Ivar Aasen",   2020,  18     },
-		            {"Vented gas KPI", "Ivar Aasen",   2021,  18     },
-		            {"Vented gas KPI", "Ivar Aasen",   2022,  27     },
-		            {"Vented gas KPI", "Ivar Aasen",   2025,  63     }
-		        }
-		    ),
-		    // Sub-unit 3B — CH4 NMVOC Vent Permit (DR005)
-		    CH4_NMVOC_Vent_Permit = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"CH4 NMVOC Vent Permit", "Ivar Aasen",   2019,  41    },
-		            {"CH4 NMVOC Vent Permit", "Ivar Aasen",   2020,  41    },
-		            {"CH4 NMVOC Vent Permit", "Ivar Aasen",   2021,  41    },
-		            {"CH4 NMVOC Vent Permit", "Ivar Aasen",   2022,  41    },
-		            {"CH4 NMVOC Vent Permit", "Ivar Aasen",   2023,  41    },
-		            {"CH4 NMVOC Vent Permit", "Ivar Aasen",   2024,  41    },
-		            {"CH4 NMVOC Vent Permit", "Ivar Aasen",   2025,  41    },
-		            {"CH4 NMVOC Vent Permit", "Skarv",        2019,  45    },
-		            {"CH4 NMVOC Vent Permit", "Skarv",        2020,  45    },
-		            {"CH4 NMVOC Vent Permit", "Skarv",        2021,  45    },
-		            {"CH4 NMVOC Vent Permit", "Skarv",        2022,  45    },
-		            {"CH4 NMVOC Vent Permit", "Skarv",        2023,  45    },
-		            {"CH4 NMVOC Vent Permit", "Skarv",        2024,  45    },
-		            {"CH4 NMVOC Vent Permit", "Skarv",        2025,  45    },
-		            {"CH4 NMVOC Vent Permit", "Alvheim",      2019, 162    },
-		            {"CH4 NMVOC Vent Permit", "Alvheim",      2020, 162    },
-		            {"CH4 NMVOC Vent Permit", "Alvheim",      2021, 162    },
-		            {"CH4 NMVOC Vent Permit", "Alvheim",      2022, 162    },
-		            {"CH4 NMVOC Vent Permit", "Alvheim",      2023, 162    },
-		            {"CH4 NMVOC Vent Permit", "Alvheim",      2024, 162    },
-		            {"CH4 NMVOC Vent Permit", "Alvheim",      2025, 162    },
-		            {"CH4 NMVOC Vent Permit", "Valhall",      2019,  24    },
-		            {"CH4 NMVOC Vent Permit", "Valhall",      2020,  24    },
-		            {"CH4 NMVOC Vent Permit", "Valhall",      2021,  24    },
-		            {"CH4 NMVOC Vent Permit", "Valhall",      2022,  24    },
-		            {"CH4 NMVOC Vent Permit", "Valhall",      2023,  24    },
-		            {"CH4 NMVOC Vent Permit", "Valhall",      2024,  24    },
-		            {"CH4 NMVOC Vent Permit", "Valhall",      2025,  27    },
-		            {"CH4 NMVOC Vent Permit", "Edvard Grieg", 2019, 127    },
-		            {"CH4 NMVOC Vent Permit", "Edvard Grieg", 2020, 127    },
-		            {"CH4 NMVOC Vent Permit", "Edvard Grieg", 2021, 127    },
-		            {"CH4 NMVOC Vent Permit", "Edvard Grieg", 2022, 127    },
-		            {"CH4 NMVOC Vent Permit", "Edvard Grieg", 2023, 127    },
-		            {"CH4 NMVOC Vent Permit", "Edvard Grieg", 2024, 127    },
-		            {"CH4 NMVOC Vent Permit", "Edvard Grieg", 2025, 127    },
-		            {"CH4 NMVOC Vent Permit", "Ula",          2023,  60    },
-		            {"CH4 NMVOC Vent Permit", "Ula",          2024,  60    },
-		            {"CH4 NMVOC Vent Permit", "Ula",          2025, 139    }
-		        }
-		    ),
-		
-		    // Sub-unit 3B — CH4 NMVOC Vent KPI (DR005)
-		    CH4_NMVOC_Vent_KPI = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"CH4 NMVOC Vent KPI", "Ivar Aasen",   2019,  41     },
-		            {"CH4 NMVOC Vent KPI", "Ivar Aasen",   2020,  41     },
-		            {"CH4 NMVOC Vent KPI", "Ivar Aasen",   2021,  41     },
-		            {"CH4 NMVOC Vent KPI", "Ivar Aasen",   2022,  41     },
-		            {"CH4 NMVOC Vent KPI", "Ivar Aasen",   2023,  41     },
-		            {"CH4 NMVOC Vent KPI", "Ivar Aasen",   2024,  41     },
-		            {"CH4 NMVOC Vent KPI", "Ivar Aasen",   2025,  41     },
-		            {"CH4 NMVOC Vent KPI", "Skarv",        2019,  45     },
-		            {"CH4 NMVOC Vent KPI", "Skarv",        2020,  45     },
-		            {"CH4 NMVOC Vent KPI", "Skarv",        2021,  45     },
-		            {"CH4 NMVOC Vent KPI", "Skarv",        2022,  45     },
-		            {"CH4 NMVOC Vent KPI", "Skarv",        2023,  45     },
-		            {"CH4 NMVOC Vent KPI", "Skarv",        2024,  45     },
-		            {"CH4 NMVOC Vent KPI", "Skarv",        2025,  45     },
-		            {"CH4 NMVOC Vent KPI", "Alvheim",      2019, 162     },
-		            {"CH4 NMVOC Vent KPI", "Alvheim",      2020, 162     },
-		            {"CH4 NMVOC Vent KPI", "Alvheim",      2021, 162     },
-		            {"CH4 NMVOC Vent KPI", "Alvheim",      2022, 162     },
-		            {"CH4 NMVOC Vent KPI", "Alvheim",      2023, 162     },
-		            {"CH4 NMVOC Vent KPI", "Alvheim",      2024, 162     },
-		            {"CH4 NMVOC Vent KPI", "Alvheim",      2025, 162     },
-		            {"CH4 NMVOC Vent KPI", "Valhall",      2019,  24     },
-		            {"CH4 NMVOC Vent KPI", "Valhall",      2020,  24     },
-		            {"CH4 NMVOC Vent KPI", "Valhall",      2021,  24     },
-		            {"CH4 NMVOC Vent KPI", "Valhall",      2022,  24     },
-		            {"CH4 NMVOC Vent KPI", "Valhall",      2023,  24     },
-		            {"CH4 NMVOC Vent KPI", "Valhall",      2024,  24     },
-		            {"CH4 NMVOC Vent KPI", "Valhall",      2025,  24.3   },
-		            {"CH4 NMVOC Vent KPI", "Edvard Grieg", 2019, 127     },
-		            {"CH4 NMVOC Vent KPI", "Edvard Grieg", 2020, 127     },
-		            {"CH4 NMVOC Vent KPI", "Edvard Grieg", 2021, 127     },
-		            {"CH4 NMVOC Vent KPI", "Edvard Grieg", 2022, 127     },
-		            {"CH4 NMVOC Vent KPI", "Edvard Grieg", 2023, 100     },
-		            {"CH4 NMVOC Vent KPI", "Edvard Grieg", 2024, 100     },
-		            {"CH4 NMVOC Vent KPI", "Edvard Grieg", 2025, 100     },
-		            {"CH4 NMVOC Vent KPI", "Ula",          2023,  60     },
-		            {"CH4 NMVOC Vent KPI", "Ula",          2024,  54     },
-		            {"CH4 NMVOC Vent KPI", "Ula",          2025, 125.1   }
-		        }
-		    ),
-		
-		    AllHistorical = Table.Combine({
-		        CO2_KPI_Year, Flaring_Permit, Flaring_KPI,
-		        Mainfield_NOX_Permit, Mainfield_NOX_KPI,
-		        Rig_NOX_Permit, Rig_NOX_KPI,
-		        Mainfield_nmVOC_Permit, Mainfield_nmVOC_KPI,
-		        Rig_nmVOC_Permit, Rig_nmVOC_KPI,
-		        MainField_CH4_Permit, MainField_CH4_KPI,
-		        Vented_Gas_Permit, Vented_Gas_KPI,
-		        CH4_NMVOC_Vent_Permit, CH4_NMVOC_Vent_KPI
-		    })
+			// ==================================================================
+			// CO2 KPI Year
+			// Source: Emissions to air partition — column [KPI CO2 tonn]
+			// Note: 2019–2024 store the legacy per-row constant (original units,
+			//   not annual tonnage). 2025 stores the annual tonnage target.
+			//   Valhall 2022/2023 = NULL in SQL (no CASE condition) — omitted.
+			//   Edvard Grieg 2019–2021 = NULL in SQL — omitted.
+			//   Valhall 2021: months 1–4 = 0.95, months 5–12 = 1.4; storing 1.4.
+			// ==================================================================
+			CO2_KPI_Year = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"CO2 KPI Year", "Valhall", 2020, 1.4},
+					{"CO2 KPI Year", "Valhall", 2021, 1.4},
+					{"CO2 KPI Year", "Valhall", 2024, 1.8},
+					{"CO2 KPI Year", "Valhall", 2025, 28000},
+					{"CO2 KPI Year", "Ula", 2020, 17.5},
+					{"CO2 KPI Year", "Ula", 2021, 19.15},
+					{"CO2 KPI Year", "Ula", 2022, 30},
+					{"CO2 KPI Year", "Ula", 2023, 29.5},
+					{"CO2 KPI Year", "Ula", 2024, 54.2},
+					{"CO2 KPI Year", "Ula", 2025, 153900},
+					{"CO2 KPI Year", "Skarv", 2019, 11.7},
+					{"CO2 KPI Year", "Skarv", 2020, 11.7},
+					{"CO2 KPI Year", "Skarv", 2021, 8},
+					{"CO2 KPI Year", "Skarv", 2022, 8},
+					{"CO2 KPI Year", "Skarv", 2023, 5.9},
+					{"CO2 KPI Year", "Skarv", 2024, 6.4},
+					{"CO2 KPI Year", "Skarv", 2025, 368000},
+					{"CO2 KPI Year", "Alvheim", 2020, 7},
+					{"CO2 KPI Year", "Alvheim", 2021, 8.5},
+					{"CO2 KPI Year", "Alvheim", 2022, 9.5},
+					{"CO2 KPI Year", "Alvheim", 2023, 9.5},
+					{"CO2 KPI Year", "Alvheim", 2024, 7.6},
+					{"CO2 KPI Year", "Alvheim", 2025, 171000},
+					{"CO2 KPI Year", "Ivar Aasen", 2020, 1},
+					{"CO2 KPI Year", "Ivar Aasen", 2021, 0.9},
+					{"CO2 KPI Year", "Ivar Aasen", 2022, 1},
+					{"CO2 KPI Year", "Ivar Aasen", 2023, 1.8},
+					{"CO2 KPI Year", "Ivar Aasen", 2024, 1.24},
+					{"CO2 KPI Year", "Ivar Aasen", 2025, 22000},
+					{"CO2 KPI Year", "Edvard Grieg", 2022, 5},
+					{"CO2 KPI Year", "Edvard Grieg", 2023, 1.7},
+					{"CO2 KPI Year", "Edvard Grieg", 2024, 1.14},
+					{"CO2 KPI Year", "Edvard Grieg", 2025, 45000}
+				}
+			),
+			// ==================================================================
+			// Flaring Permit
+			// Source: Emissions to air partition — column [Tillatelse flaring]
+			// The SQL stores QUARTERLY values for 2019–2024. These cannot be
+			// represented per (field, year). Only years with a clean annual
+			// value are included. Edvard Grieg 2023/2024 had annual figures.
+			// 2019–2024 quarterly rows will show known differences in Phase A.
+			// ==================================================================
+			Flaring_Permit = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Flaring Permit", "Edvard Grieg", 2023, 54000},
+					{"Flaring Permit", "Edvard Grieg", 2024, 1300000},
+					{"Flaring Permit", "Edvard Grieg", 2025, 4711000},
+					{"Flaring Permit", "Ula", 2025, 5514000},
+					{"Flaring Permit", "Skarv", 2025, 3240000},
+					{"Flaring Permit", "Valhall", 2025, 3057000},
+					{"Flaring Permit", "Alvheim", 2025, 3000000},
+					{"Flaring Permit", "Ivar Aasen", 2025, 2375000}
+				}
+			),
+			// ==================================================================
+			// Flaring KPI
+			// Source: Emissions to air partition — [KPI flaring] (annual basis)
+			// Annual KPI = permit × reduction factor at year-end.
+			// Edvard Grieg 2023/2024 used quarterly Division — omitted.
+			// Calculation: Ula=5514000×0.8, Skarv=3240000×1.0, Valhall=3057000×0.9,
+			//              Alvheim=3000000×1.0, Ivar Aasen=2375000×1.0, EG=4711000×1.0
+			// ==================================================================
+			Flaring_KPI = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Flaring KPI", "Ula", 2025, 4411200},
+					{"Flaring KPI", "Skarv", 2025, 3240000},
+					{"Flaring KPI", "Valhall", 2025, 2751300},
+					{"Flaring KPI", "Alvheim", 2025, 3000000},
+					{"Flaring KPI", "Ivar Aasen", 2025, 2375000},
+					{"Flaring KPI", "Edvard Grieg", 2025, 4711000}
+				}
+			),
+			// ==================================================================
+			// Mainfield NOX Permit
+			// Source: Emissions to air partition — column [Tillatelse NOx]
+			// Main field production platform rows (VALHALL PH, ULA PP,
+			// Edvard Grieg facility, Skarv FPSO, Alvheim FPSO, Ivar Aasen facility)
+			// ==================================================================
+			Mainfield_NOX_Permit = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Mainfield NOX Permit", "Valhall", 2020, 320},
+					{"Mainfield NOX Permit", "Valhall", 2021, 320},
+					{"Mainfield NOX Permit", "Valhall", 2022, 320},
+					{"Mainfield NOX Permit", "Valhall", 2023, 320},
+					{"Mainfield NOX Permit", "Valhall", 2024, 75},
+					{"Mainfield NOX Permit", "Valhall", 2025, 75},
+					{"Mainfield NOX Permit", "Ula", 2020, 1159},
+					{"Mainfield NOX Permit", "Ula", 2021, 1159},
+					{"Mainfield NOX Permit", "Ula", 2022, 1159},
+					{"Mainfield NOX Permit", "Ula", 2023, 655},
+					{"Mainfield NOX Permit", "Ula", 2024, 655},
+					{"Mainfield NOX Permit", "Ula", 2025, 655},
+					{"Mainfield NOX Permit", "Edvard Grieg", 2020, 321},
+					{"Mainfield NOX Permit", "Edvard Grieg", 2021, 321},
+					{"Mainfield NOX Permit", "Edvard Grieg", 2022, 321},
+					{"Mainfield NOX Permit", "Edvard Grieg", 2023, 144},
+					{"Mainfield NOX Permit", "Edvard Grieg", 2024, 56},
+					{"Mainfield NOX Permit", "Edvard Grieg", 2025, 56},
+					{"Mainfield NOX Permit", "Skarv", 2020, 340},
+					{"Mainfield NOX Permit", "Skarv", 2021, 340},
+					{"Mainfield NOX Permit", "Skarv", 2022, 340},
+					{"Mainfield NOX Permit", "Skarv", 2023, 340},
+					{"Mainfield NOX Permit", "Skarv", 2024, 340},
+					{"Mainfield NOX Permit", "Skarv", 2025, 340},
+					{"Mainfield NOX Permit", "Alvheim", 2020, 360},
+					{"Mainfield NOX Permit", "Alvheim", 2021, 360},
+					{"Mainfield NOX Permit", "Alvheim", 2022, 360},
+					{"Mainfield NOX Permit", "Alvheim", 2023, 360},
+					{"Mainfield NOX Permit", "Alvheim", 2024, 360},
+					{"Mainfield NOX Permit", "Alvheim", 2025, 360},
+					{"Mainfield NOX Permit", "Ivar Aasen", 2020, 293},
+					{"Mainfield NOX Permit", "Ivar Aasen", 2021, 293},
+					{"Mainfield NOX Permit", "Ivar Aasen", 2022, 293},
+					{"Mainfield NOX Permit", "Ivar Aasen", 2023, 293},
+					{"Mainfield NOX Permit", "Ivar Aasen", 2024, 293},
+					{"Mainfield NOX Permit", "Ivar Aasen", 2025, 293}
+				}
+			),
+			// ==================================================================
+			// Mainfield NOX KPI
+			// Source: Emissions to air partition — column [KPI NOx] (main field)
+			// Annual KPI = permit × factor at year-end.
+			// Valhall/Ula 2020–2022: no explicit SQL condition — omitted (NULL).
+			// ==================================================================
+			Mainfield_NOX_KPI = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Mainfield NOX KPI", "Valhall", 2023, 67.5},
+					{"Mainfield NOX KPI", "Valhall", 2024, 67.5},
+					{"Mainfield NOX KPI", "Valhall", 2025, 50},
+					{"Mainfield NOX KPI", "Ula", 2023, 589.5},
+					{"Mainfield NOX KPI", "Ula", 2024, 589.5},
+					{"Mainfield NOX KPI", "Ula", 2025, 589.5},
+					{"Mainfield NOX KPI", "Edvard Grieg", 2020, 321},
+					{"Mainfield NOX KPI", "Edvard Grieg", 2021, 321},
+					{"Mainfield NOX KPI", "Edvard Grieg", 2022, 321},
+					{"Mainfield NOX KPI", "Edvard Grieg", 2023, 144},
+					{"Mainfield NOX KPI", "Edvard Grieg", 2024, 56},
+					{"Mainfield NOX KPI", "Edvard Grieg", 2025, 56},
+					{"Mainfield NOX KPI", "Skarv", 2020, 340},
+					{"Mainfield NOX KPI", "Skarv", 2021, 340},
+					{"Mainfield NOX KPI", "Skarv", 2022, 340},
+					{"Mainfield NOX KPI", "Skarv", 2023, 340},
+					{"Mainfield NOX KPI", "Skarv", 2024, 340},
+					{"Mainfield NOX KPI", "Skarv", 2025, 340},
+					{"Mainfield NOX KPI", "Alvheim", 2020, 360},
+					{"Mainfield NOX KPI", "Alvheim", 2021, 360},
+					{"Mainfield NOX KPI", "Alvheim", 2022, 360},
+					{"Mainfield NOX KPI", "Alvheim", 2023, 360},
+					{"Mainfield NOX KPI", "Alvheim", 2024, 360},
+					{"Mainfield NOX KPI", "Alvheim", 2025, 360},
+					{"Mainfield NOX KPI", "Ivar Aasen", 2020, 293},
+					{"Mainfield NOX KPI", "Ivar Aasen", 2021, 293},
+					{"Mainfield NOX KPI", "Ivar Aasen", 2022, 293},
+					{"Mainfield NOX KPI", "Ivar Aasen", 2023, 293},
+					{"Mainfield NOX KPI", "Ivar Aasen", 2024, 293},
+					{"Mainfield NOX KPI", "Ivar Aasen", 2025, 293}
+				}
+			),
+			// ==================================================================
+			// Rig NOX Permit
+			// Source: Emissions to air partition — column [Tillatelse NOx] (rigs)
+			// Non-main-field facility rows (drilling rigs).
+			// Ula rigs pre-2023: no SQL condition — omitted (NULL).
+			// Hod A (Valhall satellite, permit=11) is not a drilling rig and
+			//   is handled separately; the rig value here (780) applies to rigs.
+			// ==================================================================
+			Rig_NOX_Permit = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Rig NOX Permit", "Valhall", 2020, 780},
+					{"Rig NOX Permit", "Valhall", 2021, 780},
+					{"Rig NOX Permit", "Valhall", 2022, 780},
+					{"Rig NOX Permit", "Valhall", 2023, 780},
+					{"Rig NOX Permit", "Valhall", 2024, 780},
+					{"Rig NOX Permit", "Valhall", 2025, 780},
+					{"Rig NOX Permit", "Ula", 2023, 496},
+					{"Rig NOX Permit", "Ula", 2024, 496},
+					{"Rig NOX Permit", "Ula", 2025, 496},
+					{"Rig NOX Permit", "Edvard Grieg", 2020, 321},
+					{"Rig NOX Permit", "Edvard Grieg", 2021, 321},
+					{"Rig NOX Permit", "Edvard Grieg", 2022, 321},
+					{"Rig NOX Permit", "Edvard Grieg", 2023, 117},
+					{"Rig NOX Permit", "Edvard Grieg", 2024, 117},
+					{"Rig NOX Permit", "Edvard Grieg", 2025, 117},
+					{"Rig NOX Permit", "Skarv", 2020, 396},
+					{"Rig NOX Permit", "Skarv", 2021, 396},
+					{"Rig NOX Permit", "Skarv", 2022, 396},
+					{"Rig NOX Permit", "Skarv", 2023, 396},
+					{"Rig NOX Permit", "Skarv", 2024, 396},
+					{"Rig NOX Permit", "Skarv", 2025, 396},
+					{"Rig NOX Permit", "Alvheim", 2020, 662},
+					{"Rig NOX Permit", "Alvheim", 2021, 662},
+					{"Rig NOX Permit", "Alvheim", 2022, 662},
+					{"Rig NOX Permit", "Alvheim", 2023, 662},
+					{"Rig NOX Permit", "Alvheim", 2024, 662},
+					{"Rig NOX Permit", "Alvheim", 2025, 662},
+					{"Rig NOX Permit", "Ivar Aasen", 2020, 66},
+					{"Rig NOX Permit", "Ivar Aasen", 2021, 66},
+					{"Rig NOX Permit", "Ivar Aasen", 2022, 66},
+					{"Rig NOX Permit", "Ivar Aasen", 2023, 170},
+					{"Rig NOX Permit", "Ivar Aasen", 2024, 170},
+					{"Rig NOX Permit", "Ivar Aasen", 2025, 170}
+				}
+			),
+			// ==================================================================
+			// Rig NOX KPI
+			// Source: Emissions to air partition — column [KPI NOx] (rig rows)
+			// Annual KPI = permit × factor at year-end.
+			// Valhall rig/Ula rig pre-2023: no SQL condition — omitted (NULL).
+			// Alvheim rig 2025: 200 (explicit override in SQL).
+			// ==================================================================
+			Rig_NOX_KPI = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Rig NOX KPI", "Valhall", 2023, 702},
+					{"Rig NOX KPI", "Valhall", 2024, 702},
+					{"Rig NOX KPI", "Valhall", 2025, 100},
+					{"Rig NOX KPI", "Ula", 2023, 446.4},
+					{"Rig NOX KPI", "Ula", 2024, 446.4},
+					{"Rig NOX KPI", "Ula", 2025, 446.4},
+					{"Rig NOX KPI", "Edvard Grieg", 2020, 321},
+					{"Rig NOX KPI", "Edvard Grieg", 2021, 321},
+					{"Rig NOX KPI", "Edvard Grieg", 2022, 321},
+					{"Rig NOX KPI", "Edvard Grieg", 2023, 117},
+					{"Rig NOX KPI", "Edvard Grieg", 2024, 117},
+					{"Rig NOX KPI", "Edvard Grieg", 2025, 117},
+					{"Rig NOX KPI", "Skarv", 2020, 396},
+					{"Rig NOX KPI", "Skarv", 2021, 396},
+					{"Rig NOX KPI", "Skarv", 2022, 396},
+					{"Rig NOX KPI", "Skarv", 2023, 396},
+					{"Rig NOX KPI", "Skarv", 2024, 396},
+					{"Rig NOX KPI", "Skarv", 2025, 396},
+					{"Rig NOX KPI", "Alvheim", 2020, 662},
+					{"Rig NOX KPI", "Alvheim", 2021, 662},
+					{"Rig NOX KPI", "Alvheim", 2022, 662},
+					{"Rig NOX KPI", "Alvheim", 2023, 662},
+					{"Rig NOX KPI", "Alvheim", 2024, 662},
+					{"Rig NOX KPI", "Alvheim", 2025, 200},
+					{"Rig NOX KPI", "Ivar Aasen", 2023, 170},
+					{"Rig NOX KPI", "Ivar Aasen", 2024, 170},
+					{"Rig NOX KPI", "Ivar Aasen", 2025, 170}
+				}
+			),
+			// ==================================================================
+			// Mainfield nmVOC Permit
+			// Source: Emissions to air partition — column [Permit nmVOC]
+			// Note: The legacy SQL has `WHEN Field='Edvard Grieg' THEN 127` which
+			//   catches ALL EG rows. The intended rig value (19) is dead code.
+			//   Storing 127 as the value the legacy model actually produces for EG.
+			//   Skarv FPSO 2025: no explicit SQL condition → NULL, omitted.
+			// ==================================================================
+			Mainfield_nmVOC_Permit = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Mainfield nmVOC Permit", "Valhall", 2020, 81},
+					{"Mainfield nmVOC Permit", "Valhall", 2021, 81},
+					{"Mainfield nmVOC Permit", "Valhall", 2022, 81},
+					{"Mainfield nmVOC Permit", "Valhall", 2023, 81},
+					{"Mainfield nmVOC Permit", "Valhall", 2024, 81},
+					{"Mainfield nmVOC Permit", "Valhall", 2025, 81},
+					{"Mainfield nmVOC Permit", "Ula", 2020, 195},
+					{"Mainfield nmVOC Permit", "Ula", 2021, 195},
+					{"Mainfield nmVOC Permit", "Ula", 2022, 195},
+					{"Mainfield nmVOC Permit", "Ula", 2023, 195},
+					{"Mainfield nmVOC Permit", "Ula", 2024, 195},
+					{"Mainfield nmVOC Permit", "Ula", 2025, 195},
+					{"Mainfield nmVOC Permit", "Edvard Grieg", 2020, 127},
+					{"Mainfield nmVOC Permit", "Edvard Grieg", 2021, 127},
+					{"Mainfield nmVOC Permit", "Edvard Grieg", 2022, 127},
+					{"Mainfield nmVOC Permit", "Edvard Grieg", 2023, 127},
+					{"Mainfield nmVOC Permit", "Edvard Grieg", 2024, 127},
+					{"Mainfield nmVOC Permit", "Edvard Grieg", 2025, 127},
+					{"Mainfield nmVOC Permit", "Skarv", 2020, 21.8},
+					{"Mainfield nmVOC Permit", "Skarv", 2021, 21.8},
+					{"Mainfield nmVOC Permit", "Skarv", 2022, 21.8},
+					{"Mainfield nmVOC Permit", "Skarv", 2023, 21.8},
+					{"Mainfield nmVOC Permit", "Skarv", 2024, 21.8},
+					{"Mainfield nmVOC Permit", "Alvheim", 2020, 62},
+					{"Mainfield nmVOC Permit", "Alvheim", 2021, 62},
+					{"Mainfield nmVOC Permit", "Alvheim", 2022, 62},
+					{"Mainfield nmVOC Permit", "Alvheim", 2023, 62},
+					{"Mainfield nmVOC Permit", "Alvheim", 2024, 62},
+					{"Mainfield nmVOC Permit", "Alvheim", 2025, 162},
+					{"Mainfield nmVOC Permit", "Ivar Aasen", 2020, 9},
+					{"Mainfield nmVOC Permit", "Ivar Aasen", 2021, 9},
+					{"Mainfield nmVOC Permit", "Ivar Aasen", 2022, 9},
+					{"Mainfield nmVOC Permit", "Ivar Aasen", 2023, 9},
+					{"Mainfield nmVOC Permit", "Ivar Aasen", 2024, 9},
+					{"Mainfield nmVOC Permit", "Ivar Aasen", 2025, 9}
+				}
+			),
+			// ==================================================================
+			// Mainfield nmVOC KPI
+			// Source: Emissions to air partition — column [KPI nmVOC] (main field)
+			// Annual KPI = permit for most fields/years (ELSE clause).
+			// Overrides: Valhall 2024+: ×0.9; Alvheim 2024+: 100; Skarv 2024: 40.
+			// ==================================================================
+			Mainfield_nmVOC_KPI = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Mainfield nmVOC KPI", "Valhall", 2020, 81},
+					{"Mainfield nmVOC KPI", "Valhall", 2021, 81},
+					{"Mainfield nmVOC KPI", "Valhall", 2022, 81},
+					{"Mainfield nmVOC KPI", "Valhall", 2023, 81},
+					{"Mainfield nmVOC KPI", "Valhall", 2024, 72.9},
+					{"Mainfield nmVOC KPI", "Valhall", 2025, 72.9},
+					{"Mainfield nmVOC KPI", "Ula", 2020, 195},
+					{"Mainfield nmVOC KPI", "Ula", 2021, 195},
+					{"Mainfield nmVOC KPI", "Ula", 2022, 195},
+					{"Mainfield nmVOC KPI", "Ula", 2023, 195},
+					{"Mainfield nmVOC KPI", "Ula", 2024, 195},
+					{"Mainfield nmVOC KPI", "Ula", 2025, 195},
+					{"Mainfield nmVOC KPI", "Edvard Grieg", 2020, 127},
+					{"Mainfield nmVOC KPI", "Edvard Grieg", 2021, 127},
+					{"Mainfield nmVOC KPI", "Edvard Grieg", 2022, 127},
+					{"Mainfield nmVOC KPI", "Edvard Grieg", 2023, 127},
+					{"Mainfield nmVOC KPI", "Edvard Grieg", 2024, 127},
+					{"Mainfield nmVOC KPI", "Edvard Grieg", 2025, 127},
+					{"Mainfield nmVOC KPI", "Skarv", 2020, 21.8},
+					{"Mainfield nmVOC KPI", "Skarv", 2021, 21.8},
+					{"Mainfield nmVOC KPI", "Skarv", 2022, 21.8},
+					{"Mainfield nmVOC KPI", "Skarv", 2023, 21.8},
+					{"Mainfield nmVOC KPI", "Skarv", 2024, 40},
+					{"Mainfield nmVOC KPI", "Alvheim", 2020, 62},
+					{"Mainfield nmVOC KPI", "Alvheim", 2021, 62},
+					{"Mainfield nmVOC KPI", "Alvheim", 2022, 62},
+					{"Mainfield nmVOC KPI", "Alvheim", 2023, 62},
+					{"Mainfield nmVOC KPI", "Alvheim", 2024, 100},
+					{"Mainfield nmVOC KPI", "Alvheim", 2025, 100},
+					{"Mainfield nmVOC KPI", "Ivar Aasen", 2020, 9},
+					{"Mainfield nmVOC KPI", "Ivar Aasen", 2021, 9},
+					{"Mainfield nmVOC KPI", "Ivar Aasen", 2022, 9},
+					{"Mainfield nmVOC KPI", "Ivar Aasen", 2023, 9},
+					{"Mainfield nmVOC KPI", "Ivar Aasen", 2024, 9},
+					{"Mainfield nmVOC KPI", "Ivar Aasen", 2025, 9}
+				}
+			),
+			// ==================================================================
+			// Rig nmVOC Permit
+			// Source: Emissions to air partition — column [Permit nmVOC] (rig rows)
+			// Note: EG, Ula, Alvheim have no facility distinction in legacy SQL;
+			//   all rows (including rigs) get the same field-level value.
+			//   Valhall rigs: 90. Ivar Aasen rigs: 21.
+			// ==================================================================
+			Rig_nmVOC_Permit = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Rig nmVOC Permit", "Valhall", 2020, 90},
+					{"Rig nmVOC Permit", "Valhall", 2021, 90},
+					{"Rig nmVOC Permit", "Valhall", 2022, 90},
+					{"Rig nmVOC Permit", "Valhall", 2023, 90},
+					{"Rig nmVOC Permit", "Valhall", 2024, 90},
+					{"Rig nmVOC Permit", "Valhall", 2025, 90},
+					{"Rig nmVOC Permit", "Ula", 2020, 195},
+					{"Rig nmVOC Permit", "Ula", 2021, 195},
+					{"Rig nmVOC Permit", "Ula", 2022, 195},
+					{"Rig nmVOC Permit", "Ula", 2023, 195},
+					{"Rig nmVOC Permit", "Ula", 2024, 195},
+					{"Rig nmVOC Permit", "Ula", 2025, 195},
+					{"Rig nmVOC Permit", "Edvard Grieg", 2020, 127},
+					{"Rig nmVOC Permit", "Edvard Grieg", 2021, 127},
+					{"Rig nmVOC Permit", "Edvard Grieg", 2022, 127},
+					{"Rig nmVOC Permit", "Edvard Grieg", 2023, 127},
+					{"Rig nmVOC Permit", "Edvard Grieg", 2024, 127},
+					{"Rig nmVOC Permit", "Edvard Grieg", 2025, 127},
+					{"Rig nmVOC Permit", "Skarv", 2020, 45},
+					{"Rig nmVOC Permit", "Skarv", 2021, 45},
+					{"Rig nmVOC Permit", "Skarv", 2022, 45},
+					{"Rig nmVOC Permit", "Skarv", 2023, 45},
+					{"Rig nmVOC Permit", "Skarv", 2024, 45},
+					{"Rig nmVOC Permit", "Skarv", 2025, 40},
+					{"Rig nmVOC Permit", "Alvheim", 2020, 62},
+					{"Rig nmVOC Permit", "Alvheim", 2021, 62},
+					{"Rig nmVOC Permit", "Alvheim", 2022, 62},
+					{"Rig nmVOC Permit", "Alvheim", 2023, 62},
+					{"Rig nmVOC Permit", "Alvheim", 2024, 62},
+					{"Rig nmVOC Permit", "Alvheim", 2025, 162},
+					{"Rig nmVOC Permit", "Ivar Aasen", 2020, 21},
+					{"Rig nmVOC Permit", "Ivar Aasen", 2021, 21},
+					{"Rig nmVOC Permit", "Ivar Aasen", 2022, 21},
+					{"Rig nmVOC Permit", "Ivar Aasen", 2023, 21},
+					{"Rig nmVOC Permit", "Ivar Aasen", 2024, 21},
+					{"Rig nmVOC Permit", "Ivar Aasen", 2025, 21}
+				}
+			),
+			// ==================================================================
+			// Rig nmVOC KPI
+			// Source: Emissions to air partition — column [KPI nmVOC] (rig rows)
+			// Annual KPI = permit via ELSE clause or specific override.
+			// Valhall 2024+: ×0.9; Alvheim 2024+: 100; Skarv 2024+: 40.
+			// ==================================================================
+			Rig_nmVOC_KPI = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Rig nmVOC KPI", "Valhall", 2020, 90},
+					{"Rig nmVOC KPI", "Valhall", 2021, 90},
+					{"Rig nmVOC KPI", "Valhall", 2022, 90},
+					{"Rig nmVOC KPI", "Valhall", 2023, 90},
+					{"Rig nmVOC KPI", "Valhall", 2024, 81},
+					{"Rig nmVOC KPI", "Valhall", 2025, 81},
+					{"Rig nmVOC KPI", "Ula", 2020, 195},
+					{"Rig nmVOC KPI", "Ula", 2021, 195},
+					{"Rig nmVOC KPI", "Ula", 2022, 195},
+					{"Rig nmVOC KPI", "Ula", 2023, 195},
+					{"Rig nmVOC KPI", "Ula", 2024, 195},
+					{"Rig nmVOC KPI", "Ula", 2025, 195},
+					{"Rig nmVOC KPI", "Edvard Grieg", 2020, 127},
+					{"Rig nmVOC KPI", "Edvard Grieg", 2021, 127},
+					{"Rig nmVOC KPI", "Edvard Grieg", 2022, 127},
+					{"Rig nmVOC KPI", "Edvard Grieg", 2023, 127},
+					{"Rig nmVOC KPI", "Edvard Grieg", 2024, 127},
+					{"Rig nmVOC KPI", "Edvard Grieg", 2025, 127},
+					{"Rig nmVOC KPI", "Skarv", 2020, 45},
+					{"Rig nmVOC KPI", "Skarv", 2021, 45},
+					{"Rig nmVOC KPI", "Skarv", 2022, 45},
+					{"Rig nmVOC KPI", "Skarv", 2023, 45},
+					{"Rig nmVOC KPI", "Skarv", 2024, 40},
+					{"Rig nmVOC KPI", "Skarv", 2025, 40},
+					{"Rig nmVOC KPI", "Alvheim", 2020, 62},
+					{"Rig nmVOC KPI", "Alvheim", 2021, 62},
+					{"Rig nmVOC KPI", "Alvheim", 2022, 62},
+					{"Rig nmVOC KPI", "Alvheim", 2023, 62},
+					{"Rig nmVOC KPI", "Alvheim", 2024, 100},
+					{"Rig nmVOC KPI", "Alvheim", 2025, 100},
+					{"Rig nmVOC KPI", "Ivar Aasen", 2020, 21},
+					{"Rig nmVOC KPI", "Ivar Aasen", 2021, 21},
+					{"Rig nmVOC KPI", "Ivar Aasen", 2022, 21},
+					{"Rig nmVOC KPI", "Ivar Aasen", 2023, 21},
+					{"Rig nmVOC KPI", "Ivar Aasen", 2024, 21},
+					{"Rig nmVOC KPI", "Ivar Aasen", 2025, 21}
+				}
+			),
+			// ==================================================================
+			// MainField CH4 permit
+			// Source: CH4_NMVOC partition — column [Tillatelse CH4]
+			// Field-level annual values (CH4_NMVOC tracks vented/combustion gas).
+			// Ula pre-2023: no SQL CASE condition — omitted (NULL).
+			// Alvheim: <2026 = 315 (formula: <2026 THEN 315, >=2026 THEN 200).
+			// Valhall: <2025 = 20, >2024 = 49.
+			// ==================================================================
+			MainField_CH4_Permit = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"MainField CH4 permit", "Ivar Aasen", 2019, 56},
+					{"MainField CH4 permit", "Ivar Aasen", 2020, 56},
+					{"MainField CH4 permit", "Ivar Aasen", 2021, 56},
+					{"MainField CH4 permit", "Ivar Aasen", 2022, 56},
+					{"MainField CH4 permit", "Ivar Aasen", 2023, 56},
+					{"MainField CH4 permit", "Ivar Aasen", 2024, 56},
+					{"MainField CH4 permit", "Ivar Aasen", 2025, 56},
+					{"MainField CH4 permit", "Skarv", 2019, 80},
+					{"MainField CH4 permit", "Skarv", 2020, 80},
+					{"MainField CH4 permit", "Skarv", 2021, 80},
+					{"MainField CH4 permit", "Skarv", 2022, 80},
+					{"MainField CH4 permit", "Skarv", 2023, 80},
+					{"MainField CH4 permit", "Skarv", 2024, 80},
+					{"MainField CH4 permit", "Skarv", 2025, 80},
+					{"MainField CH4 permit", "Alvheim", 2019, 315},
+					{"MainField CH4 permit", "Alvheim", 2020, 315},
+					{"MainField CH4 permit", "Alvheim", 2021, 315},
+					{"MainField CH4 permit", "Alvheim", 2022, 315},
+					{"MainField CH4 permit", "Alvheim", 2023, 315},
+					{"MainField CH4 permit", "Alvheim", 2024, 315},
+					{"MainField CH4 permit", "Alvheim", 2025, 315},
+					{"MainField CH4 permit", "Valhall", 2019, 20},
+					{"MainField CH4 permit", "Valhall", 2020, 20},
+					{"MainField CH4 permit", "Valhall", 2021, 20},
+					{"MainField CH4 permit", "Valhall", 2022, 20},
+					{"MainField CH4 permit", "Valhall", 2023, 20},
+					{"MainField CH4 permit", "Valhall", 2024, 20},
+					{"MainField CH4 permit", "Valhall", 2025, 49},
+					{"MainField CH4 permit", "Edvard Grieg", 2019, 132},
+					{"MainField CH4 permit", "Edvard Grieg", 2020, 132},
+					{"MainField CH4 permit", "Edvard Grieg", 2021, 132},
+					{"MainField CH4 permit", "Edvard Grieg", 2022, 132},
+					{"MainField CH4 permit", "Edvard Grieg", 2023, 132},
+					{"MainField CH4 permit", "Edvard Grieg", 2024, 132},
+					{"MainField CH4 permit", "Edvard Grieg", 2025, 132},
+					{"MainField CH4 permit", "Ula", 2023, 195},
+					{"MainField CH4 permit", "Ula", 2024, 195},
+					{"MainField CH4 permit", "Ula", 2025, 260}
+				}
+			),
+			// ==================================================================
+			// MainField CH4 KPI
+			// Source: CH4_NMVOC partition — column [KPI CH4]
+			// Annual KPI = permit × factor at year-end.
+			// Edvard Grieg 2023–2025: explicit 100 override in SQL (not permit-based).
+			// Valhall 2025: 49 × 0.9 = 44.1. Ula 2024–2025: 195/260 × 0.9.
+			// ==================================================================
+			MainField_CH4_KPI = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"MainField CH4 KPI", "Ivar Aasen", 2019, 56},
+					{"MainField CH4 KPI", "Ivar Aasen", 2020, 56},
+					{"MainField CH4 KPI", "Ivar Aasen", 2021, 56},
+					{"MainField CH4 KPI", "Ivar Aasen", 2022, 56},
+					{"MainField CH4 KPI", "Ivar Aasen", 2023, 56},
+					{"MainField CH4 KPI", "Ivar Aasen", 2024, 56},
+					{"MainField CH4 KPI", "Ivar Aasen", 2025, 56},
+					{"MainField CH4 KPI", "Skarv", 2019, 80},
+					{"MainField CH4 KPI", "Skarv", 2020, 80},
+					{"MainField CH4 KPI", "Skarv", 2021, 80},
+					{"MainField CH4 KPI", "Skarv", 2022, 80},
+					{"MainField CH4 KPI", "Skarv", 2023, 80},
+					{"MainField CH4 KPI", "Skarv", 2024, 80},
+					{"MainField CH4 KPI", "Skarv", 2025, 80},
+					{"MainField CH4 KPI", "Alvheim", 2019, 315},
+					{"MainField CH4 KPI", "Alvheim", 2020, 315},
+					{"MainField CH4 KPI", "Alvheim", 2021, 315},
+					{"MainField CH4 KPI", "Alvheim", 2022, 315},
+					{"MainField CH4 KPI", "Alvheim", 2023, 315},
+					{"MainField CH4 KPI", "Alvheim", 2024, 315},
+					{"MainField CH4 KPI", "Alvheim", 2025, 315},
+					{"MainField CH4 KPI", "Valhall", 2019, 20},
+					{"MainField CH4 KPI", "Valhall", 2020, 20},
+					{"MainField CH4 KPI", "Valhall", 2021, 20},
+					{"MainField CH4 KPI", "Valhall", 2022, 20},
+					{"MainField CH4 KPI", "Valhall", 2023, 20},
+					{"MainField CH4 KPI", "Valhall", 2024, 20},
+					{"MainField CH4 KPI", "Valhall", 2025, 44.1},
+					{"MainField CH4 KPI", "Edvard Grieg", 2019, 132},
+					{"MainField CH4 KPI", "Edvard Grieg", 2020, 132},
+					{"MainField CH4 KPI", "Edvard Grieg", 2021, 132},
+					{"MainField CH4 KPI", "Edvard Grieg", 2022, 132},
+					{"MainField CH4 KPI", "Edvard Grieg", 2023, 100},
+					{"MainField CH4 KPI", "Edvard Grieg", 2024, 100},
+					{"MainField CH4 KPI", "Edvard Grieg", 2025, 100},
+					{"MainField CH4 KPI", "Ula", 2023, 195},
+					{"MainField CH4 KPI", "Ula", 2024, 175.5},
+					{"MainField CH4 KPI", "Ula", 2025, 234}
+				}
+			),
+			// ==================================================================
+			// Vented gas permit
+			// Source: Kaldvent volum partition — column [Tillatelse Kaldvent]
+			// Only years with a single annual value per (field, year) are included.
+			// Quarterly variations (Alvheim 2020/2021/2023, EG 2022, IA 2023/2024)
+			// and missing fields (Valhall, Ula pre-2026) are omitted.
+			// ==================================================================
+			Vented_Gas_Permit = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Vented gas permit", "Alvheim", 2022, 100},
+					{"Vented gas permit", "Alvheim", 2024, 100},
+					{"Vented gas permit", "Alvheim", 2025, 263},
+					{"Vented gas permit", "Skarv", 2020, 12},
+					{"Vented gas permit", "Skarv", 2021, 23},
+					{"Vented gas permit", "Skarv", 2022, 20},
+					{"Vented gas permit", "Skarv", 2023, 25},
+					{"Vented gas permit", "Skarv", 2024, 25},
+					{"Vented gas permit", "Skarv", 2025, 40},
+					{"Vented gas permit", "Edvard Grieg", 2023, 54},
+					{"Vented gas permit", "Edvard Grieg", 2024, 45},
+					{"Vented gas permit", "Edvard Grieg", 2025, 45},
+					{"Vented gas permit", "Ivar Aasen", 2020, 18},
+					{"Vented gas permit", "Ivar Aasen", 2021, 18},
+					{"Vented gas permit", "Ivar Aasen", 2022, 27},
+					{"Vented gas permit", "Ivar Aasen", 2025, 63}
+				}
+			),
+			// ==================================================================
+			// Vented gas KPI
+			// Source: Kaldvent volum partition — column [KPI Kaldvent QTD]
+			// Annual year-end KPI values where directly determinable.
+			// EG 2023: quarterly override = 40/3 × 3 = 40 at Dec year-end.
+			// EG 2024: Division = Tillatelse/3 = 45/3 = 15; KPI at Dec = 15×3 = 45.
+			// ==================================================================
+			Vented_Gas_KPI = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Vented gas KPI", "Alvheim", 2022, 100},
+					{"Vented gas KPI", "Alvheim", 2024, 100},
+					{"Vented gas KPI", "Alvheim", 2025, 263},
+					{"Vented gas KPI", "Skarv", 2020, 12},
+					{"Vented gas KPI", "Skarv", 2021, 23},
+					{"Vented gas KPI", "Skarv", 2022, 20},
+					{"Vented gas KPI", "Skarv", 2023, 25},
+					{"Vented gas KPI", "Skarv", 2024, 25},
+					{"Vented gas KPI", "Skarv", 2025, 40},
+					{"Vented gas KPI", "Edvard Grieg", 2023, 40},
+					{"Vented gas KPI", "Edvard Grieg", 2024, 45},
+					{"Vented gas KPI", "Edvard Grieg", 2025, 45},
+					{"Vented gas KPI", "Ivar Aasen", 2020, 18},
+					{"Vented gas KPI", "Ivar Aasen", 2021, 18},
+					{"Vented gas KPI", "Ivar Aasen", 2022, 27},
+					{"Vented gas KPI", "Ivar Aasen", 2025, 63}
+				}
+			),
+			// Sub-unit 3B — CH4 NMVOC Vent Permit (DR005)
+			CH4_NMVOC_Vent_Permit = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"CH4 NMVOC Vent Permit", "Ivar Aasen", 2019, 41},
+					{"CH4 NMVOC Vent Permit", "Ivar Aasen", 2020, 41},
+					{"CH4 NMVOC Vent Permit", "Ivar Aasen", 2021, 41},
+					{"CH4 NMVOC Vent Permit", "Ivar Aasen", 2022, 41},
+					{"CH4 NMVOC Vent Permit", "Ivar Aasen", 2023, 41},
+					{"CH4 NMVOC Vent Permit", "Ivar Aasen", 2024, 41},
+					{"CH4 NMVOC Vent Permit", "Ivar Aasen", 2025, 41},
+					{"CH4 NMVOC Vent Permit", "Skarv", 2019, 45},
+					{"CH4 NMVOC Vent Permit", "Skarv", 2020, 45},
+					{"CH4 NMVOC Vent Permit", "Skarv", 2021, 45},
+					{"CH4 NMVOC Vent Permit", "Skarv", 2022, 45},
+					{"CH4 NMVOC Vent Permit", "Skarv", 2023, 45},
+					{"CH4 NMVOC Vent Permit", "Skarv", 2024, 45},
+					{"CH4 NMVOC Vent Permit", "Skarv", 2025, 45},
+					{"CH4 NMVOC Vent Permit", "Alvheim", 2019, 162},
+					{"CH4 NMVOC Vent Permit", "Alvheim", 2020, 162},
+					{"CH4 NMVOC Vent Permit", "Alvheim", 2021, 162},
+					{"CH4 NMVOC Vent Permit", "Alvheim", 2022, 162},
+					{"CH4 NMVOC Vent Permit", "Alvheim", 2023, 162},
+					{"CH4 NMVOC Vent Permit", "Alvheim", 2024, 162},
+					{"CH4 NMVOC Vent Permit", "Alvheim", 2025, 162},
+					{"CH4 NMVOC Vent Permit", "Valhall", 2019, 24},
+					{"CH4 NMVOC Vent Permit", "Valhall", 2020, 24},
+					{"CH4 NMVOC Vent Permit", "Valhall", 2021, 24},
+					{"CH4 NMVOC Vent Permit", "Valhall", 2022, 24},
+					{"CH4 NMVOC Vent Permit", "Valhall", 2023, 24},
+					{"CH4 NMVOC Vent Permit", "Valhall", 2024, 24},
+					{"CH4 NMVOC Vent Permit", "Valhall", 2025, 27},
+					{"CH4 NMVOC Vent Permit", "Edvard Grieg", 2019, 127},
+					{"CH4 NMVOC Vent Permit", "Edvard Grieg", 2020, 127},
+					{"CH4 NMVOC Vent Permit", "Edvard Grieg", 2021, 127},
+					{"CH4 NMVOC Vent Permit", "Edvard Grieg", 2022, 127},
+					{"CH4 NMVOC Vent Permit", "Edvard Grieg", 2023, 127},
+					{"CH4 NMVOC Vent Permit", "Edvard Grieg", 2024, 127},
+					{"CH4 NMVOC Vent Permit", "Edvard Grieg", 2025, 127},
+					{"CH4 NMVOC Vent Permit", "Ula", 2023, 60},
+					{"CH4 NMVOC Vent Permit", "Ula", 2024, 60},
+					{"CH4 NMVOC Vent Permit", "Ula", 2025, 139}
+				}
+			),
+			// Sub-unit 3B — CH4 NMVOC Vent KPI (DR005)
+			CH4_NMVOC_Vent_KPI = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"CH4 NMVOC Vent KPI", "Ivar Aasen", 2019, 41},
+					{"CH4 NMVOC Vent KPI", "Ivar Aasen", 2020, 41},
+					{"CH4 NMVOC Vent KPI", "Ivar Aasen", 2021, 41},
+					{"CH4 NMVOC Vent KPI", "Ivar Aasen", 2022, 41},
+					{"CH4 NMVOC Vent KPI", "Ivar Aasen", 2023, 41},
+					{"CH4 NMVOC Vent KPI", "Ivar Aasen", 2024, 41},
+					{"CH4 NMVOC Vent KPI", "Ivar Aasen", 2025, 41},
+					{"CH4 NMVOC Vent KPI", "Skarv", 2019, 45},
+					{"CH4 NMVOC Vent KPI", "Skarv", 2020, 45},
+					{"CH4 NMVOC Vent KPI", "Skarv", 2021, 45},
+					{"CH4 NMVOC Vent KPI", "Skarv", 2022, 45},
+					{"CH4 NMVOC Vent KPI", "Skarv", 2023, 45},
+					{"CH4 NMVOC Vent KPI", "Skarv", 2024, 45},
+					{"CH4 NMVOC Vent KPI", "Skarv", 2025, 45},
+					{"CH4 NMVOC Vent KPI", "Alvheim", 2019, 162},
+					{"CH4 NMVOC Vent KPI", "Alvheim", 2020, 162},
+					{"CH4 NMVOC Vent KPI", "Alvheim", 2021, 162},
+					{"CH4 NMVOC Vent KPI", "Alvheim", 2022, 162},
+					{"CH4 NMVOC Vent KPI", "Alvheim", 2023, 162},
+					{"CH4 NMVOC Vent KPI", "Alvheim", 2024, 162},
+					{"CH4 NMVOC Vent KPI", "Alvheim", 2025, 162},
+					{"CH4 NMVOC Vent KPI", "Valhall", 2019, 24},
+					{"CH4 NMVOC Vent KPI", "Valhall", 2020, 24},
+					{"CH4 NMVOC Vent KPI", "Valhall", 2021, 24},
+					{"CH4 NMVOC Vent KPI", "Valhall", 2022, 24},
+					{"CH4 NMVOC Vent KPI", "Valhall", 2023, 24},
+					{"CH4 NMVOC Vent KPI", "Valhall", 2024, 24},
+					{"CH4 NMVOC Vent KPI", "Valhall", 2025, 24.3},
+					{"CH4 NMVOC Vent KPI", "Edvard Grieg", 2019, 127},
+					{"CH4 NMVOC Vent KPI", "Edvard Grieg", 2020, 127},
+					{"CH4 NMVOC Vent KPI", "Edvard Grieg", 2021, 127},
+					{"CH4 NMVOC Vent KPI", "Edvard Grieg", 2022, 127},
+					{"CH4 NMVOC Vent KPI", "Edvard Grieg", 2023, 100},
+					{"CH4 NMVOC Vent KPI", "Edvard Grieg", 2024, 100},
+					{"CH4 NMVOC Vent KPI", "Edvard Grieg", 2025, 100},
+					{"CH4 NMVOC Vent KPI", "Ula", 2023, 60},
+					{"CH4 NMVOC Vent KPI", "Ula", 2024, 54},
+					{"CH4 NMVOC Vent KPI", "Ula", 2025, 125.1}
+				}
+			),
+			AllHistorical = Table.Combine(
+				{
+					CO2_KPI_Year,
+					Flaring_Permit,
+					Flaring_KPI,
+					Mainfield_NOX_Permit,
+					Mainfield_NOX_KPI,
+					Rig_NOX_Permit,
+					Rig_NOX_KPI,
+					Mainfield_nmVOC_Permit,
+					Mainfield_nmVOC_KPI,
+					Rig_nmVOC_Permit,
+					Rig_nmVOC_KPI,
+					MainField_CH4_Permit,
+					MainField_CH4_KPI,
+					Vented_Gas_Permit,
+					Vented_Gas_KPI,
+					CH4_NMVOC_Vent_Permit,
+					CH4_NMVOC_Vent_KPI
+				}
+			)
 		in
-		    AllHistorical
+			AllHistorical
 	lineageTag: a1b2c3d4-e5f6-7890-abcd-ef1234567890
 
 	annotation PBI_NavigationStepName = Navigasjon
@@ -762,497 +761,493 @@ expression HistoricalAirRef =
 /// and the SQL CASE logic in Oily water.
 /// Schema: (metric text, field text, year int64, value_permit_kpi number)
 /// Enable Load = false — used only as a source by CombinedSeaRef.
-/// 
+///
 /// Known limitations:
 /// Ivar Aasen oily water metrics: NULL in legacy Oily water SQL due to a
 /// field-name mapping bug (Field column maps 'PL 001B Ivar Aasen' → 'Ivar Aasen'
 /// but the KPI/permit CASE conditions still reference 'PL 001B Ivar Aasen').
 /// These rows are omitted to preserve the existing NULL behavior.
-expression HistoricalSeaRef =
+expression HistoricalSeaRef = 
 		let
-		    // ==================================================================
-		    // Radium 228 Tillatelse (228Ra permit)
-		    // Source: Radioaktive isotoper partition — Permits column, Component="228Ra"
-		    // ==================================================================
-		    Ra228_Permit = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Radium 228 Tillatelse", "Ivar Aasen",   2020,   8.2   },
-		            {"Radium 228 Tillatelse", "Ivar Aasen",   2021,  20     },
-		            {"Radium 228 Tillatelse", "Ivar Aasen",   2022,  20     },
-		            {"Radium 228 Tillatelse", "Ivar Aasen",   2023,  20     },
-		            {"Radium 228 Tillatelse", "Ivar Aasen",   2024,  20     },
-		            {"Radium 228 Tillatelse", "Ivar Aasen",   2025,  20     },
-		            {"Radium 228 Tillatelse", "Skarv",        2019,   2.23  },
-		            {"Radium 228 Tillatelse", "Skarv",        2020,   2.23  },
-		            {"Radium 228 Tillatelse", "Skarv",        2021,   2.23  },
-		            {"Radium 228 Tillatelse", "Skarv",        2022,   2.23  },
-		            {"Radium 228 Tillatelse", "Skarv",        2023,   2.23  },
-		            {"Radium 228 Tillatelse", "Skarv",        2024,   2.23  },
-		            {"Radium 228 Tillatelse", "Skarv",        2025,   2.23  },
-		            {"Radium 228 Tillatelse", "Alvheim",      2019,  12.9   },
-		            {"Radium 228 Tillatelse", "Alvheim",      2020,  12.9   },
-		            {"Radium 228 Tillatelse", "Alvheim",      2021,  12.9   },
-		            {"Radium 228 Tillatelse", "Alvheim",      2022,  12.9   },
-		            {"Radium 228 Tillatelse", "Alvheim",      2023,  12.9   },
-		            {"Radium 228 Tillatelse", "Alvheim",      2024,  12.9   },
-		            {"Radium 228 Tillatelse", "Alvheim",      2025,  12.9   },
-		            {"Radium 228 Tillatelse", "Valhall",      2019,   2.45  },
-		            {"Radium 228 Tillatelse", "Valhall",      2020,   2.45  },
-		            {"Radium 228 Tillatelse", "Valhall",      2021,   2.45  },
-		            {"Radium 228 Tillatelse", "Valhall",      2022,   2.45  },
-		            {"Radium 228 Tillatelse", "Valhall",      2023,   2.45  },
-		            {"Radium 228 Tillatelse", "Valhall",      2024,   2.45  },
-		            {"Radium 228 Tillatelse", "Valhall",      2025,   2.45  },
-		            {"Radium 228 Tillatelse", "Ula",          2020,   1.1   },
-		            {"Radium 228 Tillatelse", "Ula",          2021,  40     },
-		            {"Radium 228 Tillatelse", "Ula",          2022,  40     },
-		            {"Radium 228 Tillatelse", "Ula",          2023,  40     },
-		            {"Radium 228 Tillatelse", "Ula",          2024,  40     },
-		            {"Radium 228 Tillatelse", "Ula",          2025,  40     },
-		            {"Radium 228 Tillatelse", "Edvard Grieg", 2021,  10     },
-		            {"Radium 228 Tillatelse", "Edvard Grieg", 2022,  10     },
-		            {"Radium 228 Tillatelse", "Edvard Grieg", 2023,  10     },
-		            {"Radium 228 Tillatelse", "Edvard Grieg", 2024,  36     },
-		            {"Radium 228 Tillatelse", "Edvard Grieg", 2025,  36     }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Radium 228 KPI (228Ra KPI)
-		    // Annual KPI = Permit × 0.9 for Ula and Valhall; × 1 for others.
-		    // ==================================================================
-		    Ra228_KPI = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Radium 228 KPI", "Ivar Aasen",   2020,   8.2    },
-		            {"Radium 228 KPI", "Ivar Aasen",   2021,  20      },
-		            {"Radium 228 KPI", "Ivar Aasen",   2022,  20      },
-		            {"Radium 228 KPI", "Ivar Aasen",   2023,  20      },
-		            {"Radium 228 KPI", "Ivar Aasen",   2024,  20      },
-		            {"Radium 228 KPI", "Ivar Aasen",   2025,  20      },
-		            {"Radium 228 KPI", "Skarv",        2019,   2.23   },
-		            {"Radium 228 KPI", "Skarv",        2020,   2.23   },
-		            {"Radium 228 KPI", "Skarv",        2021,   2.23   },
-		            {"Radium 228 KPI", "Skarv",        2022,   2.23   },
-		            {"Radium 228 KPI", "Skarv",        2023,   2.23   },
-		            {"Radium 228 KPI", "Skarv",        2024,   2.23   },
-		            {"Radium 228 KPI", "Skarv",        2025,   2.23   },
-		            {"Radium 228 KPI", "Alvheim",      2019,  12.9    },
-		            {"Radium 228 KPI", "Alvheim",      2020,  12.9    },
-		            {"Radium 228 KPI", "Alvheim",      2021,  12.9    },
-		            {"Radium 228 KPI", "Alvheim",      2022,  12.9    },
-		            {"Radium 228 KPI", "Alvheim",      2023,  12.9    },
-		            {"Radium 228 KPI", "Alvheim",      2024,  12.9    },
-		            {"Radium 228 KPI", "Alvheim",      2025,  12.9    },
-		            {"Radium 228 KPI", "Valhall",      2019,   2.205  },
-		            {"Radium 228 KPI", "Valhall",      2020,   2.205  },
-		            {"Radium 228 KPI", "Valhall",      2021,   2.205  },
-		            {"Radium 228 KPI", "Valhall",      2022,   2.205  },
-		            {"Radium 228 KPI", "Valhall",      2023,   2.205  },
-		            {"Radium 228 KPI", "Valhall",      2024,   2.205  },
-		            {"Radium 228 KPI", "Valhall",      2025,   2.205  },
-		            {"Radium 228 KPI", "Ula",          2020,   0.99   },
-		            {"Radium 228 KPI", "Ula",          2021,  36      },
-		            {"Radium 228 KPI", "Ula",          2022,  36      },
-		            {"Radium 228 KPI", "Ula",          2023,  36      },
-		            {"Radium 228 KPI", "Ula",          2024,  36      },
-		            {"Radium 228 KPI", "Ula",          2025,  36      },
-		            {"Radium 228 KPI", "Edvard Grieg", 2021,  10      },
-		            {"Radium 228 KPI", "Edvard Grieg", 2022,  10      },
-		            {"Radium 228 KPI", "Edvard Grieg", 2023,  10      },
-		            {"Radium 228 KPI", "Edvard Grieg", 2024,  36      },
-		            {"Radium 228 KPI", "Edvard Grieg", 2025,  36      }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Radium 226 Tillatelse (226Ra permit)
-		    // Source: Radioaktive isotoper — Permits column, Component="226Ra"
-		    // ==================================================================
-		    Ra226_Permit = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Radium 226 Tillatelse", "Ivar Aasen",   2020,  10      },
-		            {"Radium 226 Tillatelse", "Ivar Aasen",   2021,  70      },
-		            {"Radium 226 Tillatelse", "Ivar Aasen",   2022,  70      },
-		            {"Radium 226 Tillatelse", "Ivar Aasen",   2023,  70      },
-		            {"Radium 226 Tillatelse", "Ivar Aasen",   2024,  70      },
-		            {"Radium 226 Tillatelse", "Ivar Aasen",   2025,  70      },
-		            {"Radium 226 Tillatelse", "Skarv",        2019,   2.676  },
-		            {"Radium 226 Tillatelse", "Skarv",        2020,   2.676  },
-		            {"Radium 226 Tillatelse", "Skarv",        2021,   2.676  },
-		            {"Radium 226 Tillatelse", "Skarv",        2022,   2.676  },
-		            {"Radium 226 Tillatelse", "Skarv",        2023,   2.676  },
-		            {"Radium 226 Tillatelse", "Skarv",        2024,   2.676  },
-		            {"Radium 226 Tillatelse", "Skarv",        2025,   2.676  },
-		            {"Radium 226 Tillatelse", "Alvheim",      2019,  11      },
-		            {"Radium 226 Tillatelse", "Alvheim",      2020,  11      },
-		            {"Radium 226 Tillatelse", "Alvheim",      2021,  11      },
-		            {"Radium 226 Tillatelse", "Alvheim",      2022,  11      },
-		            {"Radium 226 Tillatelse", "Alvheim",      2023,  11      },
-		            {"Radium 226 Tillatelse", "Alvheim",      2024,  11      },
-		            {"Radium 226 Tillatelse", "Alvheim",      2025,  11      },
-		            {"Radium 226 Tillatelse", "Valhall",      2019,   7.2    },
-		            {"Radium 226 Tillatelse", "Valhall",      2020,   7.2    },
-		            {"Radium 226 Tillatelse", "Valhall",      2021,   7.2    },
-		            {"Radium 226 Tillatelse", "Valhall",      2022,   7.2    },
-		            {"Radium 226 Tillatelse", "Valhall",      2023,   7.2    },
-		            {"Radium 226 Tillatelse", "Valhall",      2024,   7.2    },
-		            {"Radium 226 Tillatelse", "Valhall",      2025,   7.2    },
-		            {"Radium 226 Tillatelse", "Ula",          2020,   3.4    },
-		            {"Radium 226 Tillatelse", "Ula",          2021,  90      },
-		            {"Radium 226 Tillatelse", "Ula",          2022,  90      },
-		            {"Radium 226 Tillatelse", "Ula",          2023,  90      },
-		            {"Radium 226 Tillatelse", "Ula",          2024,  90      },
-		            {"Radium 226 Tillatelse", "Ula",          2025,  90      },
-		            {"Radium 226 Tillatelse", "Edvard Grieg", 2021,   6      },
-		            {"Radium 226 Tillatelse", "Edvard Grieg", 2022,   6      },
-		            {"Radium 226 Tillatelse", "Edvard Grieg", 2023,   6      },
-		            {"Radium 226 Tillatelse", "Edvard Grieg", 2024,  16      },
-		            {"Radium 226 Tillatelse", "Edvard Grieg", 2025,  20      }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Radium 226 KPI — Annual KPI = Permit × 0.9 for Ula/Valhall; × 1 others
-		    // ==================================================================
-		    Ra226_KPI = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Radium 226 KPI", "Ivar Aasen",   2020,  10      },
-		            {"Radium 226 KPI", "Ivar Aasen",   2021,  70      },
-		            {"Radium 226 KPI", "Ivar Aasen",   2022,  70      },
-		            {"Radium 226 KPI", "Ivar Aasen",   2023,  70      },
-		            {"Radium 226 KPI", "Ivar Aasen",   2024,  70      },
-		            {"Radium 226 KPI", "Ivar Aasen",   2025,  70      },
-		            {"Radium 226 KPI", "Skarv",        2019,   2.676  },
-		            {"Radium 226 KPI", "Skarv",        2020,   2.676  },
-		            {"Radium 226 KPI", "Skarv",        2021,   2.676  },
-		            {"Radium 226 KPI", "Skarv",        2022,   2.676  },
-		            {"Radium 226 KPI", "Skarv",        2023,   2.676  },
-		            {"Radium 226 KPI", "Skarv",        2024,   2.676  },
-		            {"Radium 226 KPI", "Skarv",        2025,   2.676  },
-		            {"Radium 226 KPI", "Alvheim",      2019,  11      },
-		            {"Radium 226 KPI", "Alvheim",      2020,  11      },
-		            {"Radium 226 KPI", "Alvheim",      2021,  11      },
-		            {"Radium 226 KPI", "Alvheim",      2022,  11      },
-		            {"Radium 226 KPI", "Alvheim",      2023,  11      },
-		            {"Radium 226 KPI", "Alvheim",      2024,  11      },
-		            {"Radium 226 KPI", "Alvheim",      2025,  11      },
-		            {"Radium 226 KPI", "Valhall",      2019,   6.48   },
-		            {"Radium 226 KPI", "Valhall",      2020,   6.48   },
-		            {"Radium 226 KPI", "Valhall",      2021,   6.48   },
-		            {"Radium 226 KPI", "Valhall",      2022,   6.48   },
-		            {"Radium 226 KPI", "Valhall",      2023,   6.48   },
-		            {"Radium 226 KPI", "Valhall",      2024,   6.48   },
-		            {"Radium 226 KPI", "Valhall",      2025,   6.48   },
-		            {"Radium 226 KPI", "Ula",          2020,   3.06   },
-		            {"Radium 226 KPI", "Ula",          2021,  81      },
-		            {"Radium 226 KPI", "Ula",          2022,  81      },
-		            {"Radium 226 KPI", "Ula",          2023,  81      },
-		            {"Radium 226 KPI", "Ula",          2024,  81      },
-		            {"Radium 226 KPI", "Ula",          2025,  81      },
-		            {"Radium 226 KPI", "Edvard Grieg", 2021,   6      },
-		            {"Radium 226 KPI", "Edvard Grieg", 2022,   6      },
-		            {"Radium 226 KPI", "Edvard Grieg", 2023,   6      },
-		            {"Radium 226 KPI", "Edvard Grieg", 2024,  16      },
-		            {"Radium 226 KPI", "Edvard Grieg", 2025,  20      }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Lead 210 Tillatelse (210Pb permit)
-		    // Source: Radioaktive isotoper — Permits column, Component="210Pb"
-		    // Edvard Grieg 2024–2025: >2023 AND <2033 → 2; >2024 → 3 is dead code.
-		    // ==================================================================
-		    Pb210_Permit = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Lead 210 Tillatelse", "Ivar Aasen",   2020,  0.4    },
-		            {"Lead 210 Tillatelse", "Ivar Aasen",   2021,  0.42   },
-		            {"Lead 210 Tillatelse", "Ivar Aasen",   2022,  0.42   },
-		            {"Lead 210 Tillatelse", "Ivar Aasen",   2023,  0.42   },
-		            {"Lead 210 Tillatelse", "Ivar Aasen",   2024,  0.42   },
-		            {"Lead 210 Tillatelse", "Ivar Aasen",   2025,  0.42   },
-		            {"Lead 210 Tillatelse", "Skarv",        2019,  0.312  },
-		            {"Lead 210 Tillatelse", "Skarv",        2020,  0.312  },
-		            {"Lead 210 Tillatelse", "Skarv",        2021,  0.312  },
-		            {"Lead 210 Tillatelse", "Skarv",        2022,  0.312  },
-		            {"Lead 210 Tillatelse", "Skarv",        2023,  0.312  },
-		            {"Lead 210 Tillatelse", "Skarv",        2024,  0.312  },
-		            {"Lead 210 Tillatelse", "Skarv",        2025,  0.312  },
-		            {"Lead 210 Tillatelse", "Alvheim",      2019,  0.8    },
-		            {"Lead 210 Tillatelse", "Alvheim",      2020,  0.8    },
-		            {"Lead 210 Tillatelse", "Alvheim",      2021,  0.8    },
-		            {"Lead 210 Tillatelse", "Alvheim",      2022,  0.8    },
-		            {"Lead 210 Tillatelse", "Alvheim",      2023,  0.8    },
-		            {"Lead 210 Tillatelse", "Alvheim",      2024,  0.8    },
-		            {"Lead 210 Tillatelse", "Alvheim",      2025,  0.8    },
-		            {"Lead 210 Tillatelse", "Valhall",      2019,  0.8    },
-		            {"Lead 210 Tillatelse", "Valhall",      2020,  0.8    },
-		            {"Lead 210 Tillatelse", "Valhall",      2021,  0.8    },
-		            {"Lead 210 Tillatelse", "Valhall",      2022,  0.8    },
-		            {"Lead 210 Tillatelse", "Valhall",      2023,  0.8    },
-		            {"Lead 210 Tillatelse", "Valhall",      2024,  0.8    },
-		            {"Lead 210 Tillatelse", "Valhall",      2025,  0.8    },
-		            {"Lead 210 Tillatelse", "Ula",          2020,  0.2    },
-		            {"Lead 210 Tillatelse", "Ula",          2021,  4      },
-		            {"Lead 210 Tillatelse", "Ula",          2022,  4      },
-		            {"Lead 210 Tillatelse", "Ula",          2023,  4      },
-		            {"Lead 210 Tillatelse", "Ula",          2024,  4      },
-		            {"Lead 210 Tillatelse", "Ula",          2025,  4      },
-		            {"Lead 210 Tillatelse", "Edvard Grieg", 2021,  0.2    },
-		            {"Lead 210 Tillatelse", "Edvard Grieg", 2022,  0.2    },
-		            {"Lead 210 Tillatelse", "Edvard Grieg", 2023,  0.2    },
-		            {"Lead 210 Tillatelse", "Edvard Grieg", 2024,  2      },
-		            {"Lead 210 Tillatelse", "Edvard Grieg", 2025,  2      }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Lead 210 KPI — Annual KPI = Permit × 0.9 for Ula/Valhall; × 1 others
-		    // ==================================================================
-		    Pb210_KPI = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Lead 210 KPI", "Ivar Aasen",   2020,  0.4    },
-		            {"Lead 210 KPI", "Ivar Aasen",   2021,  0.42   },
-		            {"Lead 210 KPI", "Ivar Aasen",   2022,  0.42   },
-		            {"Lead 210 KPI", "Ivar Aasen",   2023,  0.42   },
-		            {"Lead 210 KPI", "Ivar Aasen",   2024,  0.42   },
-		            {"Lead 210 KPI", "Ivar Aasen",   2025,  0.42   },
-		            {"Lead 210 KPI", "Skarv",        2019,  0.312  },
-		            {"Lead 210 KPI", "Skarv",        2020,  0.312  },
-		            {"Lead 210 KPI", "Skarv",        2021,  0.312  },
-		            {"Lead 210 KPI", "Skarv",        2022,  0.312  },
-		            {"Lead 210 KPI", "Skarv",        2023,  0.312  },
-		            {"Lead 210 KPI", "Skarv",        2024,  0.312  },
-		            {"Lead 210 KPI", "Skarv",        2025,  0.312  },
-		            {"Lead 210 KPI", "Alvheim",      2019,  0.8    },
-		            {"Lead 210 KPI", "Alvheim",      2020,  0.8    },
-		            {"Lead 210 KPI", "Alvheim",      2021,  0.8    },
-		            {"Lead 210 KPI", "Alvheim",      2022,  0.8    },
-		            {"Lead 210 KPI", "Alvheim",      2023,  0.8    },
-		            {"Lead 210 KPI", "Alvheim",      2024,  0.8    },
-		            {"Lead 210 KPI", "Alvheim",      2025,  0.8    },
-		            {"Lead 210 KPI", "Valhall",      2019,  0.72   },
-		            {"Lead 210 KPI", "Valhall",      2020,  0.72   },
-		            {"Lead 210 KPI", "Valhall",      2021,  0.72   },
-		            {"Lead 210 KPI", "Valhall",      2022,  0.72   },
-		            {"Lead 210 KPI", "Valhall",      2023,  0.72   },
-		            {"Lead 210 KPI", "Valhall",      2024,  0.72   },
-		            {"Lead 210 KPI", "Valhall",      2025,  0.72   },
-		            {"Lead 210 KPI", "Ula",          2020,  0.18   },
-		            {"Lead 210 KPI", "Ula",          2021,  3.6    },
-		            {"Lead 210 KPI", "Ula",          2022,  3.6    },
-		            {"Lead 210 KPI", "Ula",          2023,  3.6    },
-		            {"Lead 210 KPI", "Ula",          2024,  3.6    },
-		            {"Lead 210 KPI", "Ula",          2025,  3.6    },
-		            {"Lead 210 KPI", "Edvard Grieg", 2021,  0.2    },
-		            {"Lead 210 KPI", "Edvard Grieg", 2022,  0.2    },
-		            {"Lead 210 KPI", "Edvard Grieg", 2023,  0.2    },
-		            {"Lead 210 KPI", "Edvard Grieg", 2024,  2      },
-		            {"Lead 210 KPI", "Edvard Grieg", 2025,  2      }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Oil in Produced Water discharge Permit
-		    // Source: Oily water partition — [Tillatelser] for Stream Type = 'Produced Water'
-		    // Note: 'PL 001B Ivar Aasen' is mapped to 'Ivar Aasen' in [Field] but the
-		    //   permit CASE condition still uses 'PL 001B Ivar Aasen' — resulting in NULL
-		    //   for Ivar Aasen rows. This NULL behavior is preserved here (IA omitted).
-		    // ==================================================================
-		    ProducedWater_Permit = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Oil in Produced Water discharge Permit", "Valhall",      2020, 15   },
-		            {"Oil in Produced Water discharge Permit", "Valhall",      2021, 15   },
-		            {"Oil in Produced Water discharge Permit", "Valhall",      2022, 15   },
-		            {"Oil in Produced Water discharge Permit", "Valhall",      2023, 15   },
-		            {"Oil in Produced Water discharge Permit", "Valhall",      2024, 15   },
-		            {"Oil in Produced Water discharge Permit", "Valhall",      2025, 15   },
-		            {"Oil in Produced Water discharge Permit", "Ula",          2020, 15   },
-		            {"Oil in Produced Water discharge Permit", "Ula",          2021, 15   },
-		            {"Oil in Produced Water discharge Permit", "Ula",          2022, 15   },
-		            {"Oil in Produced Water discharge Permit", "Ula",          2023, 15   },
-		            {"Oil in Produced Water discharge Permit", "Ula",          2024, 15   },
-		            {"Oil in Produced Water discharge Permit", "Ula",          2025, 15   },
-		            {"Oil in Produced Water discharge Permit", "Skarv",        2020, 15   },
-		            {"Oil in Produced Water discharge Permit", "Skarv",        2021, 15   },
-		            {"Oil in Produced Water discharge Permit", "Skarv",        2022, 15   },
-		            {"Oil in Produced Water discharge Permit", "Skarv",        2023, 15   },
-		            {"Oil in Produced Water discharge Permit", "Skarv",        2024, 15   },
-		            {"Oil in Produced Water discharge Permit", "Skarv",        2025, 15   },
-		            {"Oil in Produced Water discharge Permit", "Alvheim",      2020, 15   },
-		            {"Oil in Produced Water discharge Permit", "Alvheim",      2021, 15   },
-		            {"Oil in Produced Water discharge Permit", "Alvheim",      2022, 15   },
-		            {"Oil in Produced Water discharge Permit", "Alvheim",      2023, 15   },
-		            {"Oil in Produced Water discharge Permit", "Alvheim",      2024, 15   },
-		            {"Oil in Produced Water discharge Permit", "Alvheim",      2025, 15   },
-		            {"Oil in Produced Water discharge Permit", "Edvard Grieg", 2020, 30   },
-		            {"Oil in Produced Water discharge Permit", "Edvard Grieg", 2021, 30   },
-		            {"Oil in Produced Water discharge Permit", "Edvard Grieg", 2022, 30   },
-		            {"Oil in Produced Water discharge Permit", "Edvard Grieg", 2023, 30   },
-		            {"Oil in Produced Water discharge Permit", "Edvard Grieg", 2024, 30   },
-		            {"Oil in Produced Water discharge Permit", "Edvard Grieg", 2025, 30   }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Oil in Produced Water discharge KPI
-		    // Source: Oily water partition — column [KPI Oil to sea]
-		    // Ivar Aasen: NULL due to field-name mapping bug — omitted.
-		    // ==================================================================
-		    ProducedWater_KPI = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Oil in Produced Water discharge KPI", "Valhall",      2020, 12    },
-		            {"Oil in Produced Water discharge KPI", "Valhall",      2021, 16    },
-		            {"Oil in Produced Water discharge KPI", "Valhall",      2022, 16    },
-		            {"Oil in Produced Water discharge KPI", "Valhall",      2023, 15    },
-		            {"Oil in Produced Water discharge KPI", "Valhall",      2024, 15    },
-		            {"Oil in Produced Water discharge KPI", "Valhall",      2025, 17    },
-		            {"Oil in Produced Water discharge KPI", "Ula",          2021, 20    },
-		            {"Oil in Produced Water discharge KPI", "Ula",          2022, 25    },
-		            {"Oil in Produced Water discharge KPI", "Ula",          2023, 25    },
-		            {"Oil in Produced Water discharge KPI", "Ula",          2024, 22.5  },
-		            {"Oil in Produced Water discharge KPI", "Ula",          2025, 21    },
-		            {"Oil in Produced Water discharge KPI", "Alvheim",      2020, 25    },
-		            {"Oil in Produced Water discharge KPI", "Alvheim",      2021, 20    },
-		            {"Oil in Produced Water discharge KPI", "Alvheim",      2022, 20    },
-		            {"Oil in Produced Water discharge KPI", "Alvheim",      2023, 20    },
-		            {"Oil in Produced Water discharge KPI", "Alvheim",      2024, 20    },
-		            {"Oil in Produced Water discharge KPI", "Alvheim",      2025, 20    },
-		            {"Oil in Produced Water discharge KPI", "Skarv",        2020, 12    },
-		            {"Oil in Produced Water discharge KPI", "Skarv",        2021, 12    },
-		            {"Oil in Produced Water discharge KPI", "Skarv",        2022, 15    },
-		            {"Oil in Produced Water discharge KPI", "Skarv",        2023, 15    },
-		            {"Oil in Produced Water discharge KPI", "Skarv",        2024, 12    },
-		            {"Oil in Produced Water discharge KPI", "Skarv",        2025, 15    },
-		            {"Oil in Produced Water discharge KPI", "Edvard Grieg", 2021, 25    },
-		            {"Oil in Produced Water discharge KPI", "Edvard Grieg", 2022, 25    },
-		            {"Oil in Produced Water discharge KPI", "Edvard Grieg", 2023, 25    },
-		            {"Oil in Produced Water discharge KPI", "Edvard Grieg", 2024, 25    },
-		            {"Oil in Produced Water discharge KPI", "Edvard Grieg", 2025, 25    }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Oil in Drained Water discharge Permit
-		    // Source: Oily water partition — [Tillatelser] for Stream Type = 'Drainage Water'
-		    // All fields pre-2026 = 30 (uniform value from SQL CASE).
-		    // Ivar Aasen: NULL due to field-name mapping bug — omitted.
-		    // ==================================================================
-		    DrainedWater_Permit = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Oil in Drained Water discharge Permit", "Valhall",      2020, 30   },
-		            {"Oil in Drained Water discharge Permit", "Valhall",      2021, 30   },
-		            {"Oil in Drained Water discharge Permit", "Valhall",      2022, 30   },
-		            {"Oil in Drained Water discharge Permit", "Valhall",      2023, 30   },
-		            {"Oil in Drained Water discharge Permit", "Valhall",      2024, 30   },
-		            {"Oil in Drained Water discharge Permit", "Valhall",      2025, 30   },
-		            {"Oil in Drained Water discharge Permit", "Ula",          2020, 30   },
-		            {"Oil in Drained Water discharge Permit", "Ula",          2021, 30   },
-		            {"Oil in Drained Water discharge Permit", "Ula",          2022, 30   },
-		            {"Oil in Drained Water discharge Permit", "Ula",          2023, 30   },
-		            {"Oil in Drained Water discharge Permit", "Ula",          2024, 30   },
-		            {"Oil in Drained Water discharge Permit", "Ula",          2025, 30   },
-		            {"Oil in Drained Water discharge Permit", "Skarv",        2020, 30   },
-		            {"Oil in Drained Water discharge Permit", "Skarv",        2021, 30   },
-		            {"Oil in Drained Water discharge Permit", "Skarv",        2022, 30   },
-		            {"Oil in Drained Water discharge Permit", "Skarv",        2023, 30   },
-		            {"Oil in Drained Water discharge Permit", "Skarv",        2024, 30   },
-		            {"Oil in Drained Water discharge Permit", "Skarv",        2025, 30   },
-		            {"Oil in Drained Water discharge Permit", "Alvheim",      2020, 30   },
-		            {"Oil in Drained Water discharge Permit", "Alvheim",      2021, 30   },
-		            {"Oil in Drained Water discharge Permit", "Alvheim",      2022, 30   },
-		            {"Oil in Drained Water discharge Permit", "Alvheim",      2023, 30   },
-		            {"Oil in Drained Water discharge Permit", "Alvheim",      2024, 30   },
-		            {"Oil in Drained Water discharge Permit", "Alvheim",      2025, 30   },
-		            {"Oil in Drained Water discharge Permit", "Edvard Grieg", 2020, 30   },
-		            {"Oil in Drained Water discharge Permit", "Edvard Grieg", 2021, 30   },
-		            {"Oil in Drained Water discharge Permit", "Edvard Grieg", 2022, 30   },
-		            {"Oil in Drained Water discharge Permit", "Edvard Grieg", 2023, 30   },
-		            {"Oil in Drained Water discharge Permit", "Edvard Grieg", 2024, 30   },
-		            {"Oil in Drained Water discharge Permit", "Edvard Grieg", 2025, 30   }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Oil in Drained Water discharge KPI
-		    // Source: Oily water partition — column [KPI drain water]
-		    // Ivar Aasen: NULL due to field-name mapping bug — omitted.
-		    // ==================================================================
-		    DrainedWater_KPI = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Oil in Drained Water discharge KPI", "Valhall",      2020, 12   },
-		            {"Oil in Drained Water discharge KPI", "Valhall",      2021, 12   },
-		            {"Oil in Drained Water discharge KPI", "Valhall",      2022, 12   },
-		            {"Oil in Drained Water discharge KPI", "Valhall",      2023, 12   },
-		            {"Oil in Drained Water discharge KPI", "Valhall",      2024, 12   },
-		            {"Oil in Drained Water discharge KPI", "Valhall",      2025, 15   },
-		            {"Oil in Drained Water discharge KPI", "Ula",          2020, 20   },
-		            {"Oil in Drained Water discharge KPI", "Ula",          2021, 15   },
-		            {"Oil in Drained Water discharge KPI", "Ula",          2022, 20   },
-		            {"Oil in Drained Water discharge KPI", "Ula",          2023, 20   },
-		            {"Oil in Drained Water discharge KPI", "Ula",          2024, 20   },
-		            {"Oil in Drained Water discharge KPI", "Ula",          2025, 15   },
-		            {"Oil in Drained Water discharge KPI", "Alvheim",      2020, 25   },
-		            {"Oil in Drained Water discharge KPI", "Alvheim",      2021, 25   },
-		            {"Oil in Drained Water discharge KPI", "Alvheim",      2022, 25   },
-		            {"Oil in Drained Water discharge KPI", "Alvheim",      2023, 20   },
-		            {"Oil in Drained Water discharge KPI", "Alvheim",      2024, 20   },
-		            {"Oil in Drained Water discharge KPI", "Alvheim",      2025, 20   },
-		            {"Oil in Drained Water discharge KPI", "Skarv",        2020, 12   },
-		            {"Oil in Drained Water discharge KPI", "Skarv",        2021, 12   },
-		            {"Oil in Drained Water discharge KPI", "Skarv",        2022, 12   },
-		            {"Oil in Drained Water discharge KPI", "Skarv",        2023, 12   },
-		            {"Oil in Drained Water discharge KPI", "Skarv",        2024, 12   },
-		            {"Oil in Drained Water discharge KPI", "Skarv",        2025, 12   },
-		            {"Oil in Drained Water discharge KPI", "Edvard Grieg", 2021, 25   },
-		            {"Oil in Drained Water discharge KPI", "Edvard Grieg", 2022, 25   },
-		            {"Oil in Drained Water discharge KPI", "Edvard Grieg", 2023, 20   },
-		            {"Oil in Drained Water discharge KPI", "Edvard Grieg", 2024, 15   },
-		            {"Oil in Drained Water discharge KPI", "Edvard Grieg", 2025, 13   }
-		        }
-		    ),
-		
-		    // ==================================================================
-		    // Produced water reinjection KPI
-		    // Source: Oily water partition — column [KPI water reinjected]
-		    // Only Alvheim and Edvard Grieg have explicit SQL conditions.
-		    // Ivar Aasen: NULL due to field-name mapping bug — omitted.
-		    // ==================================================================
-		    Reinjection_KPI = #table(
-		        type table [metric=text, field=text, year=Int64.Type, value_permit_kpi=number],
-		        {
-		            {"Produced water reinjection KPI", "Alvheim",      2021, 0.9  },
-		            {"Produced water reinjection KPI", "Alvheim",      2022, 0.9  },
-		            {"Produced water reinjection KPI", "Alvheim",      2023, 0.9  },
-		            {"Produced water reinjection KPI", "Alvheim",      2024, 0.95 },
-		            {"Produced water reinjection KPI", "Alvheim",      2025, 0.96 },
-		            {"Produced water reinjection KPI", "Edvard Grieg", 2021, 0.95 },
-		            {"Produced water reinjection KPI", "Edvard Grieg", 2022, 0.95 },
-		            {"Produced water reinjection KPI", "Edvard Grieg", 2023, 0.95 },
-		            {"Produced water reinjection KPI", "Edvard Grieg", 2024, 0.5  },
-		            {"Produced water reinjection KPI", "Edvard Grieg", 2025, 0.95 }
-		        }
-		    ),
-		
-		    AllHistorical = Table.Combine({
-		        Ra228_Permit, Ra228_KPI,
-		        Ra226_Permit, Ra226_KPI,
-		        Pb210_Permit, Pb210_KPI,
-		        ProducedWater_Permit, ProducedWater_KPI,
-		        DrainedWater_Permit, DrainedWater_KPI,
-		        Reinjection_KPI
-		    })
+			// ==================================================================
+			// Radium 228 Tillatelse (228Ra permit)
+			// Source: Radioaktive isotoper partition — Permits column, Component="228Ra"
+			// ==================================================================
+			Ra228_Permit = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Radium 228 Tillatelse", "Ivar Aasen", 2020, 8.2},
+					{"Radium 228 Tillatelse", "Ivar Aasen", 2021, 20},
+					{"Radium 228 Tillatelse", "Ivar Aasen", 2022, 20},
+					{"Radium 228 Tillatelse", "Ivar Aasen", 2023, 20},
+					{"Radium 228 Tillatelse", "Ivar Aasen", 2024, 20},
+					{"Radium 228 Tillatelse", "Ivar Aasen", 2025, 20},
+					{"Radium 228 Tillatelse", "Skarv", 2019, 2.23},
+					{"Radium 228 Tillatelse", "Skarv", 2020, 2.23},
+					{"Radium 228 Tillatelse", "Skarv", 2021, 2.23},
+					{"Radium 228 Tillatelse", "Skarv", 2022, 2.23},
+					{"Radium 228 Tillatelse", "Skarv", 2023, 2.23},
+					{"Radium 228 Tillatelse", "Skarv", 2024, 2.23},
+					{"Radium 228 Tillatelse", "Skarv", 2025, 2.23},
+					{"Radium 228 Tillatelse", "Alvheim", 2019, 12.9},
+					{"Radium 228 Tillatelse", "Alvheim", 2020, 12.9},
+					{"Radium 228 Tillatelse", "Alvheim", 2021, 12.9},
+					{"Radium 228 Tillatelse", "Alvheim", 2022, 12.9},
+					{"Radium 228 Tillatelse", "Alvheim", 2023, 12.9},
+					{"Radium 228 Tillatelse", "Alvheim", 2024, 12.9},
+					{"Radium 228 Tillatelse", "Alvheim", 2025, 12.9},
+					{"Radium 228 Tillatelse", "Valhall", 2019, 2.45},
+					{"Radium 228 Tillatelse", "Valhall", 2020, 2.45},
+					{"Radium 228 Tillatelse", "Valhall", 2021, 2.45},
+					{"Radium 228 Tillatelse", "Valhall", 2022, 2.45},
+					{"Radium 228 Tillatelse", "Valhall", 2023, 2.45},
+					{"Radium 228 Tillatelse", "Valhall", 2024, 2.45},
+					{"Radium 228 Tillatelse", "Valhall", 2025, 2.45},
+					{"Radium 228 Tillatelse", "Ula", 2020, 1.1},
+					{"Radium 228 Tillatelse", "Ula", 2021, 40},
+					{"Radium 228 Tillatelse", "Ula", 2022, 40},
+					{"Radium 228 Tillatelse", "Ula", 2023, 40},
+					{"Radium 228 Tillatelse", "Ula", 2024, 40},
+					{"Radium 228 Tillatelse", "Ula", 2025, 40},
+					{"Radium 228 Tillatelse", "Edvard Grieg", 2021, 10},
+					{"Radium 228 Tillatelse", "Edvard Grieg", 2022, 10},
+					{"Radium 228 Tillatelse", "Edvard Grieg", 2023, 10},
+					{"Radium 228 Tillatelse", "Edvard Grieg", 2024, 36},
+					{"Radium 228 Tillatelse", "Edvard Grieg", 2025, 36}
+				}
+			),
+			// ==================================================================
+			// Radium 228 KPI (228Ra KPI)
+			// Annual KPI = Permit × 0.9 for Ula and Valhall; × 1 for others.
+			// ==================================================================
+			Ra228_KPI = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Radium 228 KPI", "Ivar Aasen", 2020, 8.2},
+					{"Radium 228 KPI", "Ivar Aasen", 2021, 20},
+					{"Radium 228 KPI", "Ivar Aasen", 2022, 20},
+					{"Radium 228 KPI", "Ivar Aasen", 2023, 20},
+					{"Radium 228 KPI", "Ivar Aasen", 2024, 20},
+					{"Radium 228 KPI", "Ivar Aasen", 2025, 20},
+					{"Radium 228 KPI", "Skarv", 2019, 2.23},
+					{"Radium 228 KPI", "Skarv", 2020, 2.23},
+					{"Radium 228 KPI", "Skarv", 2021, 2.23},
+					{"Radium 228 KPI", "Skarv", 2022, 2.23},
+					{"Radium 228 KPI", "Skarv", 2023, 2.23},
+					{"Radium 228 KPI", "Skarv", 2024, 2.23},
+					{"Radium 228 KPI", "Skarv", 2025, 2.23},
+					{"Radium 228 KPI", "Alvheim", 2019, 12.9},
+					{"Radium 228 KPI", "Alvheim", 2020, 12.9},
+					{"Radium 228 KPI", "Alvheim", 2021, 12.9},
+					{"Radium 228 KPI", "Alvheim", 2022, 12.9},
+					{"Radium 228 KPI", "Alvheim", 2023, 12.9},
+					{"Radium 228 KPI", "Alvheim", 2024, 12.9},
+					{"Radium 228 KPI", "Alvheim", 2025, 12.9},
+					{"Radium 228 KPI", "Valhall", 2019, 2.205},
+					{"Radium 228 KPI", "Valhall", 2020, 2.205},
+					{"Radium 228 KPI", "Valhall", 2021, 2.205},
+					{"Radium 228 KPI", "Valhall", 2022, 2.205},
+					{"Radium 228 KPI", "Valhall", 2023, 2.205},
+					{"Radium 228 KPI", "Valhall", 2024, 2.205},
+					{"Radium 228 KPI", "Valhall", 2025, 2.205},
+					{"Radium 228 KPI", "Ula", 2020, 0.99},
+					{"Radium 228 KPI", "Ula", 2021, 36},
+					{"Radium 228 KPI", "Ula", 2022, 36},
+					{"Radium 228 KPI", "Ula", 2023, 36},
+					{"Radium 228 KPI", "Ula", 2024, 36},
+					{"Radium 228 KPI", "Ula", 2025, 36},
+					{"Radium 228 KPI", "Edvard Grieg", 2021, 10},
+					{"Radium 228 KPI", "Edvard Grieg", 2022, 10},
+					{"Radium 228 KPI", "Edvard Grieg", 2023, 10},
+					{"Radium 228 KPI", "Edvard Grieg", 2024, 36},
+					{"Radium 228 KPI", "Edvard Grieg", 2025, 36}
+				}
+			),
+			// ==================================================================
+			// Radium 226 Tillatelse (226Ra permit)
+			// Source: Radioaktive isotoper — Permits column, Component="226Ra"
+			// ==================================================================
+			Ra226_Permit = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Radium 226 Tillatelse", "Ivar Aasen", 2020, 10},
+					{"Radium 226 Tillatelse", "Ivar Aasen", 2021, 70},
+					{"Radium 226 Tillatelse", "Ivar Aasen", 2022, 70},
+					{"Radium 226 Tillatelse", "Ivar Aasen", 2023, 70},
+					{"Radium 226 Tillatelse", "Ivar Aasen", 2024, 70},
+					{"Radium 226 Tillatelse", "Ivar Aasen", 2025, 70},
+					{"Radium 226 Tillatelse", "Skarv", 2019, 2.676},
+					{"Radium 226 Tillatelse", "Skarv", 2020, 2.676},
+					{"Radium 226 Tillatelse", "Skarv", 2021, 2.676},
+					{"Radium 226 Tillatelse", "Skarv", 2022, 2.676},
+					{"Radium 226 Tillatelse", "Skarv", 2023, 2.676},
+					{"Radium 226 Tillatelse", "Skarv", 2024, 2.676},
+					{"Radium 226 Tillatelse", "Skarv", 2025, 2.676},
+					{"Radium 226 Tillatelse", "Alvheim", 2019, 11},
+					{"Radium 226 Tillatelse", "Alvheim", 2020, 11},
+					{"Radium 226 Tillatelse", "Alvheim", 2021, 11},
+					{"Radium 226 Tillatelse", "Alvheim", 2022, 11},
+					{"Radium 226 Tillatelse", "Alvheim", 2023, 11},
+					{"Radium 226 Tillatelse", "Alvheim", 2024, 11},
+					{"Radium 226 Tillatelse", "Alvheim", 2025, 11},
+					{"Radium 226 Tillatelse", "Valhall", 2019, 7.2},
+					{"Radium 226 Tillatelse", "Valhall", 2020, 7.2},
+					{"Radium 226 Tillatelse", "Valhall", 2021, 7.2},
+					{"Radium 226 Tillatelse", "Valhall", 2022, 7.2},
+					{"Radium 226 Tillatelse", "Valhall", 2023, 7.2},
+					{"Radium 226 Tillatelse", "Valhall", 2024, 7.2},
+					{"Radium 226 Tillatelse", "Valhall", 2025, 7.2},
+					{"Radium 226 Tillatelse", "Ula", 2020, 3.4},
+					{"Radium 226 Tillatelse", "Ula", 2021, 90},
+					{"Radium 226 Tillatelse", "Ula", 2022, 90},
+					{"Radium 226 Tillatelse", "Ula", 2023, 90},
+					{"Radium 226 Tillatelse", "Ula", 2024, 90},
+					{"Radium 226 Tillatelse", "Ula", 2025, 90},
+					{"Radium 226 Tillatelse", "Edvard Grieg", 2021, 6},
+					{"Radium 226 Tillatelse", "Edvard Grieg", 2022, 6},
+					{"Radium 226 Tillatelse", "Edvard Grieg", 2023, 6},
+					{"Radium 226 Tillatelse", "Edvard Grieg", 2024, 16},
+					{"Radium 226 Tillatelse", "Edvard Grieg", 2025, 20}
+				}
+			),
+			// ==================================================================
+			// Radium 226 KPI — Annual KPI = Permit × 0.9 for Ula/Valhall; × 1 others
+			// ==================================================================
+			Ra226_KPI = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Radium 226 KPI", "Ivar Aasen", 2020, 10},
+					{"Radium 226 KPI", "Ivar Aasen", 2021, 70},
+					{"Radium 226 KPI", "Ivar Aasen", 2022, 70},
+					{"Radium 226 KPI", "Ivar Aasen", 2023, 70},
+					{"Radium 226 KPI", "Ivar Aasen", 2024, 70},
+					{"Radium 226 KPI", "Ivar Aasen", 2025, 70},
+					{"Radium 226 KPI", "Skarv", 2019, 2.676},
+					{"Radium 226 KPI", "Skarv", 2020, 2.676},
+					{"Radium 226 KPI", "Skarv", 2021, 2.676},
+					{"Radium 226 KPI", "Skarv", 2022, 2.676},
+					{"Radium 226 KPI", "Skarv", 2023, 2.676},
+					{"Radium 226 KPI", "Skarv", 2024, 2.676},
+					{"Radium 226 KPI", "Skarv", 2025, 2.676},
+					{"Radium 226 KPI", "Alvheim", 2019, 11},
+					{"Radium 226 KPI", "Alvheim", 2020, 11},
+					{"Radium 226 KPI", "Alvheim", 2021, 11},
+					{"Radium 226 KPI", "Alvheim", 2022, 11},
+					{"Radium 226 KPI", "Alvheim", 2023, 11},
+					{"Radium 226 KPI", "Alvheim", 2024, 11},
+					{"Radium 226 KPI", "Alvheim", 2025, 11},
+					{"Radium 226 KPI", "Valhall", 2019, 6.48},
+					{"Radium 226 KPI", "Valhall", 2020, 6.48},
+					{"Radium 226 KPI", "Valhall", 2021, 6.48},
+					{"Radium 226 KPI", "Valhall", 2022, 6.48},
+					{"Radium 226 KPI", "Valhall", 2023, 6.48},
+					{"Radium 226 KPI", "Valhall", 2024, 6.48},
+					{"Radium 226 KPI", "Valhall", 2025, 6.48},
+					{"Radium 226 KPI", "Ula", 2020, 3.06},
+					{"Radium 226 KPI", "Ula", 2021, 81},
+					{"Radium 226 KPI", "Ula", 2022, 81},
+					{"Radium 226 KPI", "Ula", 2023, 81},
+					{"Radium 226 KPI", "Ula", 2024, 81},
+					{"Radium 226 KPI", "Ula", 2025, 81},
+					{"Radium 226 KPI", "Edvard Grieg", 2021, 6},
+					{"Radium 226 KPI", "Edvard Grieg", 2022, 6},
+					{"Radium 226 KPI", "Edvard Grieg", 2023, 6},
+					{"Radium 226 KPI", "Edvard Grieg", 2024, 16},
+					{"Radium 226 KPI", "Edvard Grieg", 2025, 20}
+				}
+			),
+			// ==================================================================
+			// Lead 210 Tillatelse (210Pb permit)
+			// Source: Radioaktive isotoper — Permits column, Component="210Pb"
+			// Edvard Grieg 2024–2025: >2023 AND <2033 → 2; >2024 → 3 is dead code.
+			// ==================================================================
+			Pb210_Permit = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Lead 210 Tillatelse", "Ivar Aasen", 2020, 0.4},
+					{"Lead 210 Tillatelse", "Ivar Aasen", 2021, 0.42},
+					{"Lead 210 Tillatelse", "Ivar Aasen", 2022, 0.42},
+					{"Lead 210 Tillatelse", "Ivar Aasen", 2023, 0.42},
+					{"Lead 210 Tillatelse", "Ivar Aasen", 2024, 0.42},
+					{"Lead 210 Tillatelse", "Ivar Aasen", 2025, 0.42},
+					{"Lead 210 Tillatelse", "Skarv", 2019, 0.312},
+					{"Lead 210 Tillatelse", "Skarv", 2020, 0.312},
+					{"Lead 210 Tillatelse", "Skarv", 2021, 0.312},
+					{"Lead 210 Tillatelse", "Skarv", 2022, 0.312},
+					{"Lead 210 Tillatelse", "Skarv", 2023, 0.312},
+					{"Lead 210 Tillatelse", "Skarv", 2024, 0.312},
+					{"Lead 210 Tillatelse", "Skarv", 2025, 0.312},
+					{"Lead 210 Tillatelse", "Alvheim", 2019, 0.8},
+					{"Lead 210 Tillatelse", "Alvheim", 2020, 0.8},
+					{"Lead 210 Tillatelse", "Alvheim", 2021, 0.8},
+					{"Lead 210 Tillatelse", "Alvheim", 2022, 0.8},
+					{"Lead 210 Tillatelse", "Alvheim", 2023, 0.8},
+					{"Lead 210 Tillatelse", "Alvheim", 2024, 0.8},
+					{"Lead 210 Tillatelse", "Alvheim", 2025, 0.8},
+					{"Lead 210 Tillatelse", "Valhall", 2019, 0.8},
+					{"Lead 210 Tillatelse", "Valhall", 2020, 0.8},
+					{"Lead 210 Tillatelse", "Valhall", 2021, 0.8},
+					{"Lead 210 Tillatelse", "Valhall", 2022, 0.8},
+					{"Lead 210 Tillatelse", "Valhall", 2023, 0.8},
+					{"Lead 210 Tillatelse", "Valhall", 2024, 0.8},
+					{"Lead 210 Tillatelse", "Valhall", 2025, 0.8},
+					{"Lead 210 Tillatelse", "Ula", 2020, 0.2},
+					{"Lead 210 Tillatelse", "Ula", 2021, 4},
+					{"Lead 210 Tillatelse", "Ula", 2022, 4},
+					{"Lead 210 Tillatelse", "Ula", 2023, 4},
+					{"Lead 210 Tillatelse", "Ula", 2024, 4},
+					{"Lead 210 Tillatelse", "Ula", 2025, 4},
+					{"Lead 210 Tillatelse", "Edvard Grieg", 2021, 0.2},
+					{"Lead 210 Tillatelse", "Edvard Grieg", 2022, 0.2},
+					{"Lead 210 Tillatelse", "Edvard Grieg", 2023, 0.2},
+					{"Lead 210 Tillatelse", "Edvard Grieg", 2024, 2},
+					{"Lead 210 Tillatelse", "Edvard Grieg", 2025, 2}
+				}
+			),
+			// ==================================================================
+			// Lead 210 KPI — Annual KPI = Permit × 0.9 for Ula/Valhall; × 1 others
+			// ==================================================================
+			Pb210_KPI = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Lead 210 KPI", "Ivar Aasen", 2020, 0.4},
+					{"Lead 210 KPI", "Ivar Aasen", 2021, 0.42},
+					{"Lead 210 KPI", "Ivar Aasen", 2022, 0.42},
+					{"Lead 210 KPI", "Ivar Aasen", 2023, 0.42},
+					{"Lead 210 KPI", "Ivar Aasen", 2024, 0.42},
+					{"Lead 210 KPI", "Ivar Aasen", 2025, 0.42},
+					{"Lead 210 KPI", "Skarv", 2019, 0.312},
+					{"Lead 210 KPI", "Skarv", 2020, 0.312},
+					{"Lead 210 KPI", "Skarv", 2021, 0.312},
+					{"Lead 210 KPI", "Skarv", 2022, 0.312},
+					{"Lead 210 KPI", "Skarv", 2023, 0.312},
+					{"Lead 210 KPI", "Skarv", 2024, 0.312},
+					{"Lead 210 KPI", "Skarv", 2025, 0.312},
+					{"Lead 210 KPI", "Alvheim", 2019, 0.8},
+					{"Lead 210 KPI", "Alvheim", 2020, 0.8},
+					{"Lead 210 KPI", "Alvheim", 2021, 0.8},
+					{"Lead 210 KPI", "Alvheim", 2022, 0.8},
+					{"Lead 210 KPI", "Alvheim", 2023, 0.8},
+					{"Lead 210 KPI", "Alvheim", 2024, 0.8},
+					{"Lead 210 KPI", "Alvheim", 2025, 0.8},
+					{"Lead 210 KPI", "Valhall", 2019, 0.72},
+					{"Lead 210 KPI", "Valhall", 2020, 0.72},
+					{"Lead 210 KPI", "Valhall", 2021, 0.72},
+					{"Lead 210 KPI", "Valhall", 2022, 0.72},
+					{"Lead 210 KPI", "Valhall", 2023, 0.72},
+					{"Lead 210 KPI", "Valhall", 2024, 0.72},
+					{"Lead 210 KPI", "Valhall", 2025, 0.72},
+					{"Lead 210 KPI", "Ula", 2020, 0.18},
+					{"Lead 210 KPI", "Ula", 2021, 3.6},
+					{"Lead 210 KPI", "Ula", 2022, 3.6},
+					{"Lead 210 KPI", "Ula", 2023, 3.6},
+					{"Lead 210 KPI", "Ula", 2024, 3.6},
+					{"Lead 210 KPI", "Ula", 2025, 3.6},
+					{"Lead 210 KPI", "Edvard Grieg", 2021, 0.2},
+					{"Lead 210 KPI", "Edvard Grieg", 2022, 0.2},
+					{"Lead 210 KPI", "Edvard Grieg", 2023, 0.2},
+					{"Lead 210 KPI", "Edvard Grieg", 2024, 2},
+					{"Lead 210 KPI", "Edvard Grieg", 2025, 2}
+				}
+			),
+			// ==================================================================
+			// Oil in Produced Water discharge Permit
+			// Source: Oily water partition — [Tillatelser] for Stream Type = 'Produced Water'
+			// Note: 'PL 001B Ivar Aasen' is mapped to 'Ivar Aasen' in [Field] but the
+			//   permit CASE condition still uses 'PL 001B Ivar Aasen' — resulting in NULL
+			//   for Ivar Aasen rows. This NULL behavior is preserved here (IA omitted).
+			// ==================================================================
+			ProducedWater_Permit = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Oil in Produced Water discharge Permit", "Valhall", 2020, 15},
+					{"Oil in Produced Water discharge Permit", "Valhall", 2021, 15},
+					{"Oil in Produced Water discharge Permit", "Valhall", 2022, 15},
+					{"Oil in Produced Water discharge Permit", "Valhall", 2023, 15},
+					{"Oil in Produced Water discharge Permit", "Valhall", 2024, 15},
+					{"Oil in Produced Water discharge Permit", "Valhall", 2025, 15},
+					{"Oil in Produced Water discharge Permit", "Ula", 2020, 15},
+					{"Oil in Produced Water discharge Permit", "Ula", 2021, 15},
+					{"Oil in Produced Water discharge Permit", "Ula", 2022, 15},
+					{"Oil in Produced Water discharge Permit", "Ula", 2023, 15},
+					{"Oil in Produced Water discharge Permit", "Ula", 2024, 15},
+					{"Oil in Produced Water discharge Permit", "Ula", 2025, 15},
+					{"Oil in Produced Water discharge Permit", "Skarv", 2020, 15},
+					{"Oil in Produced Water discharge Permit", "Skarv", 2021, 15},
+					{"Oil in Produced Water discharge Permit", "Skarv", 2022, 15},
+					{"Oil in Produced Water discharge Permit", "Skarv", 2023, 15},
+					{"Oil in Produced Water discharge Permit", "Skarv", 2024, 15},
+					{"Oil in Produced Water discharge Permit", "Skarv", 2025, 15},
+					{"Oil in Produced Water discharge Permit", "Alvheim", 2020, 15},
+					{"Oil in Produced Water discharge Permit", "Alvheim", 2021, 15},
+					{"Oil in Produced Water discharge Permit", "Alvheim", 2022, 15},
+					{"Oil in Produced Water discharge Permit", "Alvheim", 2023, 15},
+					{"Oil in Produced Water discharge Permit", "Alvheim", 2024, 15},
+					{"Oil in Produced Water discharge Permit", "Alvheim", 2025, 15},
+					{"Oil in Produced Water discharge Permit", "Edvard Grieg", 2020, 30},
+					{"Oil in Produced Water discharge Permit", "Edvard Grieg", 2021, 30},
+					{"Oil in Produced Water discharge Permit", "Edvard Grieg", 2022, 30},
+					{"Oil in Produced Water discharge Permit", "Edvard Grieg", 2023, 30},
+					{"Oil in Produced Water discharge Permit", "Edvard Grieg", 2024, 30},
+					{"Oil in Produced Water discharge Permit", "Edvard Grieg", 2025, 30}
+				}
+			),
+			// ==================================================================
+			// Oil in Produced Water discharge KPI
+			// Source: Oily water partition — column [KPI Oil to sea]
+			// Ivar Aasen: NULL due to field-name mapping bug — omitted.
+			// ==================================================================
+			ProducedWater_KPI = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Oil in Produced Water discharge KPI", "Valhall", 2020, 12},
+					{"Oil in Produced Water discharge KPI", "Valhall", 2021, 16},
+					{"Oil in Produced Water discharge KPI", "Valhall", 2022, 16},
+					{"Oil in Produced Water discharge KPI", "Valhall", 2023, 15},
+					{"Oil in Produced Water discharge KPI", "Valhall", 2024, 15},
+					{"Oil in Produced Water discharge KPI", "Valhall", 2025, 17},
+					{"Oil in Produced Water discharge KPI", "Ula", 2021, 20},
+					{"Oil in Produced Water discharge KPI", "Ula", 2022, 25},
+					{"Oil in Produced Water discharge KPI", "Ula", 2023, 25},
+					{"Oil in Produced Water discharge KPI", "Ula", 2024, 22.5},
+					{"Oil in Produced Water discharge KPI", "Ula", 2025, 21},
+					{"Oil in Produced Water discharge KPI", "Alvheim", 2020, 25},
+					{"Oil in Produced Water discharge KPI", "Alvheim", 2021, 20},
+					{"Oil in Produced Water discharge KPI", "Alvheim", 2022, 20},
+					{"Oil in Produced Water discharge KPI", "Alvheim", 2023, 20},
+					{"Oil in Produced Water discharge KPI", "Alvheim", 2024, 20},
+					{"Oil in Produced Water discharge KPI", "Alvheim", 2025, 20},
+					{"Oil in Produced Water discharge KPI", "Skarv", 2020, 12},
+					{"Oil in Produced Water discharge KPI", "Skarv", 2021, 12},
+					{"Oil in Produced Water discharge KPI", "Skarv", 2022, 15},
+					{"Oil in Produced Water discharge KPI", "Skarv", 2023, 15},
+					{"Oil in Produced Water discharge KPI", "Skarv", 2024, 12},
+					{"Oil in Produced Water discharge KPI", "Skarv", 2025, 15},
+					{"Oil in Produced Water discharge KPI", "Edvard Grieg", 2021, 25},
+					{"Oil in Produced Water discharge KPI", "Edvard Grieg", 2022, 25},
+					{"Oil in Produced Water discharge KPI", "Edvard Grieg", 2023, 25},
+					{"Oil in Produced Water discharge KPI", "Edvard Grieg", 2024, 25},
+					{"Oil in Produced Water discharge KPI", "Edvard Grieg", 2025, 25}
+				}
+			),
+			// ==================================================================
+			// Oil in Drained Water discharge Permit
+			// Source: Oily water partition — [Tillatelser] for Stream Type = 'Drainage Water'
+			// All fields pre-2026 = 30 (uniform value from SQL CASE).
+			// Ivar Aasen: NULL due to field-name mapping bug — omitted.
+			// ==================================================================
+			DrainedWater_Permit = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Oil in Drained Water discharge Permit", "Valhall", 2020, 30},
+					{"Oil in Drained Water discharge Permit", "Valhall", 2021, 30},
+					{"Oil in Drained Water discharge Permit", "Valhall", 2022, 30},
+					{"Oil in Drained Water discharge Permit", "Valhall", 2023, 30},
+					{"Oil in Drained Water discharge Permit", "Valhall", 2024, 30},
+					{"Oil in Drained Water discharge Permit", "Valhall", 2025, 30},
+					{"Oil in Drained Water discharge Permit", "Ula", 2020, 30},
+					{"Oil in Drained Water discharge Permit", "Ula", 2021, 30},
+					{"Oil in Drained Water discharge Permit", "Ula", 2022, 30},
+					{"Oil in Drained Water discharge Permit", "Ula", 2023, 30},
+					{"Oil in Drained Water discharge Permit", "Ula", 2024, 30},
+					{"Oil in Drained Water discharge Permit", "Ula", 2025, 30},
+					{"Oil in Drained Water discharge Permit", "Skarv", 2020, 30},
+					{"Oil in Drained Water discharge Permit", "Skarv", 2021, 30},
+					{"Oil in Drained Water discharge Permit", "Skarv", 2022, 30},
+					{"Oil in Drained Water discharge Permit", "Skarv", 2023, 30},
+					{"Oil in Drained Water discharge Permit", "Skarv", 2024, 30},
+					{"Oil in Drained Water discharge Permit", "Skarv", 2025, 30},
+					{"Oil in Drained Water discharge Permit", "Alvheim", 2020, 30},
+					{"Oil in Drained Water discharge Permit", "Alvheim", 2021, 30},
+					{"Oil in Drained Water discharge Permit", "Alvheim", 2022, 30},
+					{"Oil in Drained Water discharge Permit", "Alvheim", 2023, 30},
+					{"Oil in Drained Water discharge Permit", "Alvheim", 2024, 30},
+					{"Oil in Drained Water discharge Permit", "Alvheim", 2025, 30},
+					{"Oil in Drained Water discharge Permit", "Edvard Grieg", 2020, 30},
+					{"Oil in Drained Water discharge Permit", "Edvard Grieg", 2021, 30},
+					{"Oil in Drained Water discharge Permit", "Edvard Grieg", 2022, 30},
+					{"Oil in Drained Water discharge Permit", "Edvard Grieg", 2023, 30},
+					{"Oil in Drained Water discharge Permit", "Edvard Grieg", 2024, 30},
+					{"Oil in Drained Water discharge Permit", "Edvard Grieg", 2025, 30}
+				}
+			),
+			// ==================================================================
+			// Oil in Drained Water discharge KPI
+			// Source: Oily water partition — column [KPI drain water]
+			// Ivar Aasen: NULL due to field-name mapping bug — omitted.
+			// ==================================================================
+			DrainedWater_KPI = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Oil in Drained Water discharge KPI", "Valhall", 2020, 12},
+					{"Oil in Drained Water discharge KPI", "Valhall", 2021, 12},
+					{"Oil in Drained Water discharge KPI", "Valhall", 2022, 12},
+					{"Oil in Drained Water discharge KPI", "Valhall", 2023, 12},
+					{"Oil in Drained Water discharge KPI", "Valhall", 2024, 12},
+					{"Oil in Drained Water discharge KPI", "Valhall", 2025, 15},
+					{"Oil in Drained Water discharge KPI", "Ula", 2020, 20},
+					{"Oil in Drained Water discharge KPI", "Ula", 2021, 15},
+					{"Oil in Drained Water discharge KPI", "Ula", 2022, 20},
+					{"Oil in Drained Water discharge KPI", "Ula", 2023, 20},
+					{"Oil in Drained Water discharge KPI", "Ula", 2024, 20},
+					{"Oil in Drained Water discharge KPI", "Ula", 2025, 15},
+					{"Oil in Drained Water discharge KPI", "Alvheim", 2020, 25},
+					{"Oil in Drained Water discharge KPI", "Alvheim", 2021, 25},
+					{"Oil in Drained Water discharge KPI", "Alvheim", 2022, 25},
+					{"Oil in Drained Water discharge KPI", "Alvheim", 2023, 20},
+					{"Oil in Drained Water discharge KPI", "Alvheim", 2024, 20},
+					{"Oil in Drained Water discharge KPI", "Alvheim", 2025, 20},
+					{"Oil in Drained Water discharge KPI", "Skarv", 2020, 12},
+					{"Oil in Drained Water discharge KPI", "Skarv", 2021, 12},
+					{"Oil in Drained Water discharge KPI", "Skarv", 2022, 12},
+					{"Oil in Drained Water discharge KPI", "Skarv", 2023, 12},
+					{"Oil in Drained Water discharge KPI", "Skarv", 2024, 12},
+					{"Oil in Drained Water discharge KPI", "Skarv", 2025, 12},
+					{"Oil in Drained Water discharge KPI", "Edvard Grieg", 2021, 25},
+					{"Oil in Drained Water discharge KPI", "Edvard Grieg", 2022, 25},
+					{"Oil in Drained Water discharge KPI", "Edvard Grieg", 2023, 20},
+					{"Oil in Drained Water discharge KPI", "Edvard Grieg", 2024, 15},
+					{"Oil in Drained Water discharge KPI", "Edvard Grieg", 2025, 13}
+				}
+			),
+			// ==================================================================
+			// Produced water reinjection KPI
+			// Source: Oily water partition — column [KPI water reinjected]
+			// Only Alvheim and Edvard Grieg have explicit SQL conditions.
+			// Ivar Aasen: NULL due to field-name mapping bug — omitted.
+			// ==================================================================
+			Reinjection_KPI = #table(
+				type table [metric = text, field = text, year = Int64.Type, value_permit_kpi = number],
+				{
+					{"Produced water reinjection KPI", "Alvheim", 2021, 0.9},
+					{"Produced water reinjection KPI", "Alvheim", 2022, 0.9},
+					{"Produced water reinjection KPI", "Alvheim", 2023, 0.9},
+					{"Produced water reinjection KPI", "Alvheim", 2024, 0.95},
+					{"Produced water reinjection KPI", "Alvheim", 2025, 0.96},
+					{"Produced water reinjection KPI", "Edvard Grieg", 2021, 0.95},
+					{"Produced water reinjection KPI", "Edvard Grieg", 2022, 0.95},
+					{"Produced water reinjection KPI", "Edvard Grieg", 2023, 0.95},
+					{"Produced water reinjection KPI", "Edvard Grieg", 2024, 0.5},
+					{"Produced water reinjection KPI", "Edvard Grieg", 2025, 0.95}
+				}
+			),
+			AllHistorical = Table.Combine(
+				{
+					Ra228_Permit,
+					Ra228_KPI,
+					Ra226_Permit,
+					Ra226_KPI,
+					Pb210_Permit,
+					Pb210_KPI,
+					ProducedWater_Permit,
+					ProducedWater_KPI,
+					DrainedWater_Permit,
+					DrainedWater_KPI,
+					Reinjection_KPI
+				}
+			)
 		in
-		    AllHistorical
+			AllHistorical
 	lineageTag: b2c3d4e5-f6a7-8901-bcde-f12345678901
 
 	annotation PBI_NavigationStepName = Navigasjon
@@ -1264,27 +1259,22 @@ expression HistoricalSeaRef =
 /// pivots to wide format: one row per (field, year), one column per metric.
 /// This is the lookup surface used by fact table merge steps in Units 1–6.
 /// Enable Load = false — used only as a merge source in fact table partitions.
-expression CombinedAirRef =
+expression CombinedAirRef = 
 		let
-		    // Reference the Fabric AIR_REF table (already in the model)
-		    AIR_REF = #"dbt_gold_nems_emission fact_nems__permit_kpi_to_air",
-		
-		    // Select only the columns needed (drop unit column to match HistoricalAirRef schema)
-		    AirRefTall = Table.SelectColumns(AIR_REF, {"metric", "field", "year", "value_permit_kpi"}),
-		
-		    // Union historical (2019–2025) with Fabric data (2026)
-		    Combined = Table.Combine({HistoricalAirRef, AirRefTall}),
-		
-		    // Sort for stable pivot column ordering
-		    Sorted = Table.Sort(Combined, {{"metric", Order.Ascending}, {"field", Order.Ascending}, {"year", Order.Ascending}}),
-		
-		    // Determine pivot columns from the full combined metric list
-		    MetricList = List.Sort(List.Distinct(Sorted[metric])),
-		
-		    // Pivot by metric — one row per (field, year), one column per metric
-		    Pivoted = Table.Pivot(Sorted, MetricList, "metric", "value_permit_kpi", List.First)
+			// Reference the Fabric AIR_REF table (already in the model)
+			AIR_REF = #"dbt_gold_nems_emission fact_nems__permit_kpi_to_air",
+			// Select only the columns needed (drop unit column to match HistoricalAirRef schema)
+			AirRefTall = Table.SelectColumns(AIR_REF, {"metric", "field", "year", "value_permit_kpi"}),
+			// Union historical (2019–2025) with Fabric data (2026)
+			Combined = Table.Combine({HistoricalAirRef, AirRefTall}),
+			// Sort for stable pivot column ordering
+			Sorted = Table.Sort(Combined, {{"metric", Order.Ascending}, {"field", Order.Ascending}, {"year", Order.Ascending}}),
+			// Determine pivot columns from the full combined metric list
+			MetricList = List.Sort(List.Distinct(Sorted[metric])),
+			// Pivot by metric — one row per (field, year), one column per metric
+			Pivoted = Table.Pivot(Sorted, MetricList, "metric", "value_permit_kpi", List.First)
 		in
-		    Pivoted
+			Pivoted
 	lineageTag: c3d4e5f6-a7b8-9012-cdef-123456789012
 
 	annotation PBI_NavigationStepName = Navigasjon
@@ -1296,27 +1286,22 @@ expression CombinedAirRef =
 /// pivots to wide format: one row per (field, year), one column per metric.
 /// This is the lookup surface used by fact table merge steps in Units 7–8.
 /// Enable Load = false — used only as a merge source in fact table partitions.
-expression CombinedSeaRef =
+expression CombinedSeaRef = 
 		let
-		    // Reference the Fabric SEA_REF table (already in the model)
-		    SEA_REF = #"dbt_gold_nems_emission fact_nems__permit_kpi_to_sea",
-		
-		    // Union historical (2019–2025) with Fabric data (2026)
-		    Combined = Table.Combine({HistoricalSeaRef, SEA_REF}),
-		
-		    // Sort for stable pivot column ordering
-		    Sorted = Table.Sort(Combined, {{"metric", Order.Ascending}, {"field", Order.Ascending}, {"year", Order.Ascending}}),
-		
-		    // Determine pivot columns from the full combined metric list
-		    MetricList = List.Sort(List.Distinct(Sorted[metric])),
-		
-		    // Pivot by metric — one row per (field, year), one column per metric
-		    Pivoted = Table.Pivot(Sorted, MetricList, "metric", "value_permit_kpi", List.First)
+			// Reference the Fabric SEA_REF table (already in the model)
+			SEA_REF = #"dbt_gold_nems_emission fact_nems__permit_kpi_to_sea",
+			// Union historical (2019–2025) with Fabric data (2026)
+			Combined = Table.Combine({HistoricalSeaRef, SEA_REF}),
+			// Sort for stable pivot column ordering
+			Sorted = Table.Sort(Combined, {{"metric", Order.Ascending}, {"field", Order.Ascending}, {"year", Order.Ascending}}),
+			// Determine pivot columns from the full combined metric list
+			MetricList = List.Sort(List.Distinct(Sorted[metric])),
+			// Pivot by metric — one row per (field, year), one column per metric
+			Pivoted = Table.Pivot(Sorted, MetricList, "metric", "value_permit_kpi", List.First)
 		in
-		    Pivoted
+			Pivoted
 	lineageTag: d4e5f6a7-b8c9-0123-defa-234567890123
 
 	annotation PBI_NavigationStepName = Navigasjon
 
 	annotation PBI_ResultType = Table
-

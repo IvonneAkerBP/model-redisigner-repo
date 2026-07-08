@@ -35,6 +35,4 @@ ref table 'Radioaktive isotoper'
 ref table LocalDateTable_343e897d-4fc1-41b4-96ce-9acd5046d5ca
 ref table 'dbt_gold_nems_emission fact_nems__permit_kpi_to_air'
 ref table 'dbt_gold_nems_emission fact_nems__permit_kpi_to_sea'
-
 ref cultureInfo nb-NO
-

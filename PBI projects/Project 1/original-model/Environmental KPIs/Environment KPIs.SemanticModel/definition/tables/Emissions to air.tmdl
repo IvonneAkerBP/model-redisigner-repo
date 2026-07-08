@@ -1,0 +1,1025 @@
+table 'Emissions to air'
+	lineageTag: 0887925e-5358-4502-ab1a-315009a8d7d9
+
+	measure 'Volume QTD' =
+			
+			IF(
+				ISFILTERED('Dim_Date'[Date]),
+				ERROR("Time intelligence quick measures can only be grouped or filtered by the Power BI-provided date hierarchy or primary date column."),
+				TOTALQTD(SUM('Emissions to air'[Volume]), 'Dim_Date'[Date].[Date])
+			)
+		lineageTag: e1d1f0f2-a7b3-4958-a267-1f721aa2e0ae
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Volume divided by Count of DayOfMonth' =
+			
+			DIVIDE(SUM('Emissions to air'[Volume]), COUNTA('Dim_Date'[DayNo]))
+		lineageTag: 00f4c8ae-61cf-4858-b669-6df5dbb88c7f
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Volume average per Date' =
+			
+			AVERAGEX(
+				KEEPFILTERS(VALUES('Dim_Date'[Date])),
+				CALCULATE(SUM('Emissions to air'[Volume]))
+			)
+		lineageTag: 5f673aa4-5997-4f8b-9eb7-ae8466b10389
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'NOx Emissions YTD' = ```
+			
+			IF(
+				ISFILTERED('Dim_Date'[Date]),
+				ERROR("Time intelligence quick measures can only be grouped or filtered by the Power BI-provided date hierarchy or primary date column."),
+				TOTALYTD(SUM('Emissions to air'[NOx Emissions]), 'Dim_Date'[Date].[Date])
+			)
+			
+			```
+		lineageTag: d1f37bd7-8575-478a-aef5-a268cba3671b
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Cold ventilated gas YTD' =
+			
+			IF(
+				ISFILTERED('Dim_Date'[Date]),
+				ERROR("Time intelligence quick measures can only be grouped or filtered by the Power BI-provided date hierarchy or primary date column."),
+				TOTALYTD(
+					SUM('Emissions to air'[Cold ventilated gas]),
+					'Dim_Date'[Date].[Date]
+				)
+			)
+		lineageTag: 495a81e3-1650-46d7-8687-f073d9f9f1f8
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'CO2 Emissions QTD' =
+			
+			IF(
+				ISFILTERED('Dim_Date'[Date]),
+				ERROR("Time intelligence quick measures can only be grouped or filtered by the Power BI-provided date hierarchy or primary date column."),
+				TOTALQTD(SUM('Emissions to air'[CO2 Emissions]), 'Dim_Date'[Date].[Date])
+			)
+		lineageTag: 84544761-cd61-47ea-b008-54f11b59f6e9
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'CO2 Emissions Ton' = SUM( 'Emissions to air'[CO2 Emissions] ) / 1000
+		lineageTag: ac5c1e2d-a5a0-494c-9290-a2e34b0c2f1a
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'CO2 Emissions YTD' =
+			
+			IF(
+				ISFILTERED('Dim_Date'[Date]),
+				ERROR("Time intelligence quick measures can only be grouped or filtered by the Power BI-provided date hierarchy or primary date column."),
+				TOTALYTD(SUM('Emissions to air'[CO2 Emissions]), 'Dim_Date'[Date].[Date])
+			) /1000
+		lineageTag: 327eb9bc-bb71-433f-bb4a-bb41f0d4cb1d
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'CO2 in tonne' = [CO2 Emissions YTD]
+		lineageTag: 7fd7636d-9102-4575-98eb-fbfcca1f917b
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average of Volume QTD' =
+			
+			IF(
+				ISFILTERED('Dim_Date'[Date]),
+				ERROR("Time intelligence quick measures can only be grouped or filtered by the Power BI-provided date hierarchy or primary date column."),
+				TOTALQTD(AVERAGE('Emissions to air'[Volume]), 'Dim_Date'[Date].[Date])
+			)
+		lineageTag: 37057cd3-9006-4858-b6ea-6dca4dcd6709
+
+		changedProperty = IsHidden
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'CH4 Emissions YTD' =
+			
+			IF(
+				ISFILTERED('Dim_Date'[Date]),
+				ERROR("Time intelligence quick measures can only be grouped or filtered by the Power BI-provided date hierarchy or primary date column."),
+				TOTALYTD(SUM('Emissions to air'[CH4 Emissions]), 'Dim_Date'[Date].[Date])
+			)
+		lineageTag: 98d0265c-1846-4d17-972a-30ed6e821588
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "YearToDate"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'NMVOC Emissions YTD' =
+			
+			IF(
+				ISFILTERED('Dim_Date'[Date]),
+				ERROR("Time intelligence quick measures can only be grouped or filtered by the Power BI-provided date hierarchy or primary date column."),
+				TOTALYTD(
+					SUM('Emissions to air'[NMVOC Emissions]),
+					'Dim_Date'[Date].[Date]
+				)
+			)
+		lineageTag: a5837721-03ca-429b-86ad-a56cb8800430
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "YearToDate"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Volume YTD' =
+			
+			IF(
+				ISFILTERED('Dim_Date'[Date]),
+				ERROR("Time intelligence quick measures can only be grouped or filtered by the Power BI-provided date hierarchy or primary date column."),
+				TOTALYTD(SUM('Emissions to air'[Volume]), 'Dim_Date'[Date].[Date])
+			)
+		lineageTag: 535dc63f-0ed9-4c6d-870c-e86a564c8620
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "YearToDate"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'NOx KPI year' =
+			CALCULATE( MAX( 'Emissions to air'[KPI NOx] ), ( 'Emissions to air'[Field] IN { "Ula", "Hod", "Skarv" } ) )
+			    + CALCULATE(
+			        MAX( 'Emissions to air'[KPI NOx] ) * 12 / MONTH( LASTDATE( 'Emissions to air'[Time_Id] ) ),
+			        ( 'Emissions to air'[Field] IN { "Valhall", "Alvheim", "Edvard Grieg", "Ivar Aasen" } )
+			    )
+			    + CALCULATE(
+			        MAX( 'Emissions to air'[Tillatelse NOx] ),
+			        NOT ( 'Emissions to air'[Field] IN { "Valhall", "Ula", "Hod", "Skarv", "Alvheim", "Edvard Grieg", "Ivar Aasen" } )
+			    )
+		lineageTag: 3f20d01b-8b49-47a3-ac4b-1f559f4332e8
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'nmVOCfuel KPI year' = CALCULATE(MAX('Emissions to air'[Permit nmVOC])*0.9,('Emissions to air'[Field]  IN {"Valhall"})) + CALCULATE(MAX('Emissions to air'[Permit nmVOC]), NOT ('Emissions to air'[Field]  IN {"Valhall"}))
+		lineageTag: dfb7ca73-203f-4d04-9f3b-3b68376c7879
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure yaxis_co2 = [CO2 Emissions YTD]+3000
+		lineageTag: e1615968-0037-40da-b995-136e88cae124
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'nmVOC_KPI year' = MAX('Emissions to air'[KPI nmVOC])*12/MONTH(LASTDATE('Emissions to air'[Time_Id]))
+		lineageTag: 248c988d-5bf2-469f-9ca6-b594fe8a58b0
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'CO2 KPI year' = DIVIDE(MAX('Emissions to air'[KPI CO2 tonn]), MAX('Emissions to air'[Month]))*12
+		lineageTag: 0e2d2626-5a0d-4e54-97fc-2603696a0141
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Time_Id
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 2e058bea-8880-4da1-86fe-4d96bd4a66bb
+		summarizeBy: none
+		sourceColumn: Time_Id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Field
+		dataType: string
+		lineageTag: cc5a69ce-94d7-44a0-b35a-bc3e093f05e8
+		summarizeBy: none
+		sourceColumn: Field
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Facility
+		dataType: string
+		lineageTag: 40749154-43b5-41ac-8380-3d7b9a12cea8
+		summarizeBy: none
+		sourceColumn: Facility
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Emissions Source'
+		dataType: string
+		lineageTag: 71540a70-7385-4dc2-b50a-95fb5d1fc396
+		summarizeBy: none
+		sourceColumn: Emissions Source
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Stream Subtype'
+		dataType: string
+		lineageTag: f1b30332-2d25-48c5-9edd-6c9f4f728396
+		summarizeBy: none
+		sourceColumn: Stream Subtype
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Source Details'
+		dataType: string
+		lineageTag: 6b4414e8-ea35-4144-87d0-c39ceb50a130
+		summarizeBy: none
+		sourceColumn: Source Details
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'CO2 Emissions'
+		dataType: double
+		lineageTag: 13fa4b4c-4b22-42b8-bb6a-01d321984b70
+		summarizeBy: sum
+		sourceColumn: CO2 Emissions
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'NOx Emissions'
+		dataType: double
+		lineageTag: 414f7db8-cea2-45fb-a6f1-efdf00b6105d
+		summarizeBy: sum
+		sourceColumn: NOx Emissions
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'CH4 Emissions'
+		dataType: double
+		lineageTag: abf4538b-9f73-4386-a473-9239bfe0cba3
+		summarizeBy: sum
+		sourceColumn: CH4 Emissions
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'NMVOC Emissions'
+		dataType: double
+		lineageTag: 3e78d017-5e8c-47a7-a7ca-4b2598f1654d
+		summarizeBy: sum
+		sourceColumn: NMVOC Emissions
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'SOx Emissions'
+		dataType: double
+		lineageTag: 48f967d3-bc54-450d-9f45-9149121d27f5
+		summarizeBy: sum
+		sourceColumn: SOx Emissions
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Volume
+		dataType: double
+		lineageTag: 94216145-ecd5-4b3f-8456-59383bd3919d
+		summarizeBy: sum
+		sourceColumn: Volume
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Energy
+		dataType: double
+		lineageTag: f5dd19a7-b3be-48ea-8d08-280c0481e3c4
+		summarizeBy: sum
+		sourceColumn: Energy
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Quarter
+		dataType: int64
+		formatString: 0
+		lineageTag: 97fd2771-9da5-4fdb-bdca-78d9592604a6
+		summarizeBy: sum
+		sourceColumn: Quarter
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 93824f35-d451-4d19-9ca8-827f645f3583
+		summarizeBy: sum
+		sourceColumn: Year
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: int64
+		formatString: 0
+		lineageTag: c8e2a3ba-06e3-4d35-b5c4-3487fe556a1d
+		summarizeBy: sum
+		sourceColumn: Month
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Tillatelse flaring'
+		dataType: int64
+		formatString: 0
+		lineageTag: e6762970-d105-4663-a5aa-7c0d4068502c
+		summarizeBy: sum
+		sourceColumn: Tillatelse flaring
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Division
+		dataType: double
+		lineageTag: 0d616223-996e-4be4-bb07-3d450aeebf1c
+		summarizeBy: sum
+		sourceColumn: Division
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Tillatelse NOx'
+		dataType: double
+		lineageTag: fa7d4130-ac00-46de-b3da-6273927ae671
+		summarizeBy: sum
+		sourceColumn: Tillatelse NOx
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'KPI NOx'
+		dataType: double
+		lineageTag: 94163edf-8df0-416e-a127-7f90a51b89c8
+		summarizeBy: sum
+		sourceColumn: KPI NOx
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Cold ventilated gas'
+		dataType: double
+		lineageTag: d7a7d8cb-d8d6-4e93-96a8-5d82b80d2f7b
+		summarizeBy: sum
+		sourceColumn: Cold ventilated gas
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Permit Cold ventilated gas'
+		dataType: int64
+		formatString: 0
+		lineageTag: 44224c25-59e2-49c3-9a31-50ca4b07c4cd
+		summarizeBy: sum
+		sourceColumn: Permit Cold ventilated gas
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'KPI Cold ventilated gas'
+		dataType: double
+		formatString: 0
+		lineageTag: eaab8ed1-4912-42c9-9820-f3f36507dcd8
+		summarizeBy: sum
+		sourceColumn: KPI Cold ventilated gas
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Permit nmVOC'
+		dataType: double
+		lineageTag: 04d4f4ba-5e93-4395-9de6-b8307130d9c2
+		summarizeBy: sum
+		sourceColumn: Permit nmVOC
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'KPI nmVOC'
+		dataType: double
+		lineageTag: c297bed9-4d1e-444e-9876-bbb03e878ed8
+		summarizeBy: sum
+		sourceColumn: KPI nmVOC
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column loc_key
+		dataType: string
+		lineageTag: 1d2b8d7f-0dc3-4cf2-a9bc-cd7be9cd0f4e
+		summarizeBy: none
+		sourceColumn: loc_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'KPI CO2 tonn'
+		dataType: double
+		lineageTag: 03e59b22-84e4-4369-b8f3-3589f9e4b7e5
+		summarizeBy: sum
+		sourceColumn: KPI CO2 tonn
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'KPI flaring'
+		dataType: int64
+		formatString: 0
+		lineageTag: 07134bd4-554d-497a-9e9a-a61d35a06585
+		summarizeBy: sum
+		sourceColumn: KPI flaring
+
+		annotation SummarizationSetBy = Automatic
+
+	column QuarterNum
+		dataType: int64
+		formatString: 0
+		lineageTag: a985eaf0-2d49-4084-8758-14f109941efa
+		summarizeBy: sum
+		sourceColumn: QuarterNum
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearNum
+		dataType: int64
+		formatString: 0
+		lineageTag: 1612e8c8-6dcd-450f-ba02-4fee72204d15
+		summarizeBy: sum
+		sourceColumn: YearNum
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthNum
+		dataType: int64
+		formatString: 0
+		lineageTag: 015e8001-b339-47bd-8c84-66c4c5d3e52d
+		summarizeBy: sum
+		sourceColumn: MonthNum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Emissions to air-64c6f1ee-34af-4e19-b817-6e8089dfec19' = m
+		mode: import
+		source = ```
+				let
+				    Source = Sql.Database(
+				        "obax4o2iqosevp5oa2r6dbtune-2dhddioar5aebauc4huzjvnrve.datawarehouse.fabric.microsoft.com",
+				        "wh_gold_hsseq",
+				        [Query="WITH CTE AS (  -- målinger/utslipp fra Nems
+				    SELECT 
+				        CAST([date] AS date) AS Time_Id,
+				        CASE 
+				            WHEN field = 'Fenris'                THEN 'Valhall'
+				            WHEN field = 'PL 001B Ivar Aasen'    THEN 'Ivar Aasen'
+				            WHEN field = 'HANZ'                  THEN 'Ivar Aasen'
+				            WHEN field = 'Tambar'                THEN 'Ula'
+				            WHEN field = 'Alve Nord'             THEN 'Skarv'
+				            WHEN field = 'Idun Nord'             THEN 'Skarv'
+				            WHEN field = 'Ørn'                   THEN 'Skarv'
+				            WHEN field = 'Symra'                 THEN 'Ivar Aasen'
+				            WHEN field = 'Solveig'               THEN 'Edvard Grieg'
+				            ELSE field
+				        END AS Field,
+				        CASE 
+				            WHEN (field = 'Fenris'    AND facility = 'Noble Integrator')   THEN 'Fenris/Noble Integrator'
+				            WHEN (field = 'Tambar'    AND facility = 'Noble Invincible')   THEN 'Tambar/Noble Invincible'
+				            WHEN (field = 'Alve Nord' AND facility = 'Scarabeo 8')         THEN 'Alve Nord/Scarabeo 8'
+				            WHEN (field = 'Idun Nord' AND facility = 'Scarabeo 8')         THEN 'Idun Nord/Scarabeo 8'
+				            WHEN (field = 'Ørn' AND facility = 'Scarabeo 8')               THEN 'Ørn/Scarabeo 8'
+				            WHEN (field = 'Symra'     AND facility = 'Deepsea Nordkapp')   THEN 'Symra/Deepsea Nordkapp'
+				            WHEN (field = 'Solveig'   AND facility = 'Deepsea Nordkapp')   THEN 'Solveig/Deepsea Nordkapp'
+				            ELSE facility
+				        END AS Facility,
+				        [emissions_source]         AS [Emissions Source],
+				        [stream_subtype]           AS [Stream Subtype],
+				        [source_details]           AS [Source Details],
+				        [co2_emissions_tonnes]*1000     AS [CO2 Emissions],
+				        [nox_emissions_tonnes]     AS [NOx Emissions],
+				        [ch4_emissions_tonnes]     AS [CH4 Emissions],
+				        [nmvoc_emissions_tonnes]   AS [NMVOC Emissions],
+				        [sox_emissions_tonnes]     AS [SOx Emissions],
+				        [volume_m3]               AS [Volume],
+				        [energy_mwh]               AS [Energy],
+				        DATEPART(QUARTER, [date])  AS [QuarterNum],
+				        DATEPART(YEAR,    [date])  AS [YearNum],
+				        DATEPART(MONTH,   [date])  AS [MonthNum]
+				    FROM [dbt_gold_nems_environment_kpi].[fact_nems__environment_kpi_emission_to_air_ctt] 
+				    WHERE 
+				    fabric_valid_to_date = '9999-12-31 00:00:00.000000'
+				
+				    UNION ALL
+				
+				    SELECT 
+				        CAST([date] AS date) AS Time_Id,
+				        CASE WHEN field = 'Hod' THEN 'Valhall' ELSE field END AS Field,
+				        facility AS Facility,
+				        [emissions_source]       AS [Emissions Source],
+				        [stream_subtype]         AS [Stream Subtype],
+				        [source_details]         AS [Source Details],
+				        [co2_emissions_tonnes]*1000   AS [CO2 Emissions],
+				        NULL                     AS [NOx Emissions],
+				        NULL                     AS [CH4 Emissions],
+				        NULL                     AS [NMVOC Emissions],
+				        NULL                     AS [SOx Emissions],
+				        NULL                     AS [Volume],
+				        NULL                     AS [Energy],
+				        DATEPART(QUARTER, [date]) AS [QuarterNum],
+				        DATEPART(YEAR,    [date]) AS [YearNum],
+				        DATEPART(MONTH,   [date]) AS [MonthNum]
+				    FROM [dbt_gold_nems_environment_kpi].[fact_nems__environment_kpi_emission_to_air_ctt]
+				    WHERE field = 'Hod' AND 
+				    fabric_valid_to_date = '9999-12-31 00:00:00.000000'
+				),
+				Tillatelse_flaring AS (  -- tillatelse for flaring
+				    SELECT 
+				        CTE.*,
+				        CASE 
+				            -- Ula
+				            WHEN Field = 'Ula' AND [YearNum]=2019 AND [QuarterNum]=1 THEN 1640000
+				            WHEN Field = 'Ula' AND [YearNum]=2019 AND [QuarterNum]=2 THEN 1640000
+				            WHEN Field = 'Ula' AND [YearNum]=2019 AND [QuarterNum]=3 THEN 1640000
+				            WHEN Field = 'Ula' AND [YearNum]=2019 AND [QuarterNum]=4 THEN 1640000
+				            WHEN Field = 'Ula' AND [YearNum]=2020 AND [QuarterNum]=1 THEN 1800000
+				            WHEN Field = 'Ula' AND [YearNum]=2020 AND [QuarterNum]=2 THEN 1820000
+				            WHEN Field = 'Ula' AND [YearNum]=2020 AND [QuarterNum]=3 THEN 1840000
+				            WHEN Field = 'Ula' AND [YearNum]=2020 AND [QuarterNum]=4 THEN 1840000
+				            WHEN Field = 'Ula' AND [YearNum]=2021 AND [QuarterNum]=1 THEN 1540000
+				            WHEN Field = 'Ula' AND [YearNum]=2021 AND [QuarterNum]=2 THEN 1860000
+				            WHEN Field = 'Ula' AND [YearNum]=2021 AND [QuarterNum]=3 THEN 1560000
+				            WHEN Field = 'Ula' AND [YearNum]=2021 AND [QuarterNum]=4 THEN 1560000
+				            WHEN Field = 'Ula' AND [YearNum]=2022 AND [QuarterNum]=1 THEN 1540000
+				            WHEN Field = 'Ula' AND [YearNum]=2022 AND [QuarterNum]=2 THEN 1860000
+				            WHEN Field = 'Ula' AND [YearNum]=2022 AND [QuarterNum]=3 THEN 1560000
+				            WHEN Field = 'Ula' AND [YearNum]=2022 AND [QuarterNum]=4 THEN 1560000
+				            WHEN Field = 'Ula' AND [YearNum]=2023 AND [QuarterNum]=1 THEN 1420000
+				            WHEN Field = 'Ula' AND [YearNum]=2023 AND [QuarterNum]=2 THEN 1651000
+				            WHEN Field = 'Ula' AND [YearNum]=2023 AND [QuarterNum]=3 THEN 2112000
+				            WHEN Field = 'Ula' AND [YearNum]=2023 AND [QuarterNum]=4 THEN 1442000
+				            WHEN Field = 'Ula' AND [YearNum]=2024 AND [QuarterNum]=1 THEN 1420000
+				            WHEN Field = 'Ula' AND [YearNum]=2024 AND [QuarterNum]=2 THEN 1651000
+				            WHEN Field = 'Ula' AND [YearNum]=2024 AND [QuarterNum]=3 THEN 1812000
+				            WHEN Field = 'Ula' AND [YearNum]=2024 AND [QuarterNum]=4 THEN 1442000
+				            WHEN Field = 'Ula' AND [YearNum]=2025 THEN 5514000
+				            WHEN Field = 'Ula' AND [YearNum]=2026 THEN 4928000
+				
+				            -- Skarv
+				            WHEN Field = 'Skarv' AND [YearNum]=2020 AND [QuarterNum]=1 THEN 1080000
+				            WHEN Field = 'Skarv' AND [YearNum]=2020 AND [QuarterNum]=2 THEN 2057000
+				            WHEN Field = 'Skarv' AND [YearNum]=2020 AND [QuarterNum]=3 THEN 5000000
+				            WHEN Field = 'Skarv' AND [YearNum]=2020 AND [QuarterNum]=4 THEN 3500000
+				            WHEN Field = 'Skarv' AND [YearNum]=2021 AND [QuarterNum]=1 THEN 1080000
+				            WHEN Field = 'Skarv' AND [YearNum]=2021 AND [QuarterNum]=2 THEN 2057000
+				            WHEN Field = 'Skarv' AND [YearNum]=2021 AND [QuarterNum]=3 THEN 5000000
+				            WHEN Field = 'Skarv' AND [YearNum]=2021 AND [QuarterNum]=4 THEN 3500000
+				            WHEN Field = 'Skarv' AND [YearNum]=2022 AND [QuarterNum]=1 THEN 1069000
+				            WHEN Field = 'Skarv' AND [YearNum]=2022 AND [QuarterNum]=2 THEN 1057000
+				            WHEN Field = 'Skarv' AND [YearNum]=2022 AND [QuarterNum]=3 THEN 1081000
+				            WHEN Field = 'Skarv' AND [YearNum]=2022 AND [QuarterNum]=4 THEN 1081000
+				            WHEN Field = 'Skarv' AND [YearNum]=2023 AND [QuarterNum]=1 THEN 1000000
+				            WHEN Field = 'Skarv' AND [YearNum]=2023 AND [QuarterNum]=2 THEN 1000000
+				            WHEN Field = 'Skarv' AND [YearNum]=2023 AND [QuarterNum]=3 THEN 5000000
+				            WHEN Field = 'Skarv' AND [YearNum]=2023 AND [QuarterNum]=4 THEN 1000000
+				            WHEN Field = 'Skarv' AND [YearNum]=2024 AND [QuarterNum]=1 THEN 750000
+				            WHEN Field = 'Skarv' AND [YearNum]=2024 AND [QuarterNum]=2 THEN 750000
+				            WHEN Field = 'Skarv' AND [YearNum]=2024 AND [QuarterNum]=3 THEN 950000
+				            WHEN Field = 'Skarv' AND [YearNum]=2024 AND [QuarterNum]=4 THEN 750000
+				            WHEN Field = 'Skarv' AND [YearNum]=2025 THEN 3240000
+				            WHEN Field = 'Skarv' AND [YearNum]=2026 THEN 3240000
+				            -- Valhall
+				            WHEN Field = 'Valhall' AND [YearNum]=2020 AND [QuarterNum]=1 THEN 810000
+				            WHEN Field = 'Valhall' AND [YearNum]=2020 AND [QuarterNum]=2 THEN 1183000
+				            WHEN Field = 'Valhall' AND [YearNum]=2020 AND [QuarterNum]=3 THEN 828000
+				            WHEN Field = 'Valhall' AND [YearNum]=2020 AND [QuarterNum]=4 THEN 1012000
+				            WHEN Field = 'Valhall' AND [YearNum]=2021 AND [QuarterNum]=1 THEN 810000
+				            WHEN Field = 'Valhall' AND [YearNum]=2021 AND [QuarterNum]=2 THEN 1183000
+				            WHEN Field = 'Valhall' AND [YearNum]=2021 AND [QuarterNum]=3 THEN 828000
+				            WHEN Field = 'Valhall' AND [YearNum]=2021 AND [QuarterNum]=4 THEN 1012000
+				            WHEN Field = 'Valhall' AND [YearNum]=2022 AND [QuarterNum]=1 THEN 675000
+				            WHEN Field = 'Valhall' AND [YearNum]=2022 AND [QuarterNum]=2 THEN 2200000
+				            WHEN Field = 'Valhall' AND [YearNum]=2022 AND [QuarterNum]=3 THEN 2200000
+				            WHEN Field = 'Valhall' AND [YearNum]=2022 AND [QuarterNum]=4 THEN 2400000
+				            WHEN Field = 'Valhall' AND [YearNum]=2023 AND [QuarterNum]=1 THEN 2000000
+				            WHEN Field = 'Valhall' AND [YearNum]=2023 AND [QuarterNum]=2 THEN 2000000
+				            WHEN Field = 'Valhall' AND [YearNum]=2023 AND [QuarterNum]=3 THEN 2026000
+				            WHEN Field = 'Valhall' AND [YearNum]=2023 AND [QuarterNum]=4 THEN 2026000
+				            WHEN Field = 'Valhall' AND [YearNum]=2024 AND [QuarterNum]=1 THEN 2221000
+				            WHEN Field = 'Valhall' AND [YearNum]=2024 AND [QuarterNum]=2 THEN 2026000
+				            WHEN Field = 'Valhall' AND [YearNum]=2024 AND [QuarterNum]=3 THEN 1087000
+				            WHEN Field = 'Valhall' AND [YearNum]=2024 AND [QuarterNum]=4 THEN 1087000
+				            WHEN Field = 'Valhall' AND [YearNum]=2025 THEN 3057000
+				            WHEN Field = 'Valhall' AND [YearNum]=2026 THEN 2246000
+				            -- Alvheim
+				            WHEN Field = 'Alvheim' AND [YearNum]=2020 AND [QuarterNum]=1 THEN 3960000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2020 AND [QuarterNum]=2 THEN 1840000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2020 AND [QuarterNum]=3 THEN 1840000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2020 AND [QuarterNum]=4 THEN 1840000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2021 AND [QuarterNum]=1 THEN 1692000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2021 AND [QuarterNum]=2 THEN 1692000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2021 AND [QuarterNum]=3 THEN 1692000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2021 AND [QuarterNum]=4 THEN 1692000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2022 AND [QuarterNum]=1 THEN 1250000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2022 AND [QuarterNum]=2 THEN 1250000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2022 AND [QuarterNum]=3 THEN 1250000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2022 AND [QuarterNum]=4 THEN 1250000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2023 AND [QuarterNum]=1 THEN 1750000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2023 AND [QuarterNum]=2 THEN 750000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2023 AND [QuarterNum]=3 THEN 795000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2023 AND [QuarterNum]=4 THEN 12750000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2024 AND [QuarterNum]=1 THEN 750000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2024 AND [QuarterNum]=2 THEN 1500000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2024 AND [QuarterNum]=3 THEN 750000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2024 AND [QuarterNum]=4 THEN 750000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2025 THEN 3000000
+				            WHEN Field = 'Alvheim' AND [YearNum]=2026 THEN 3000000
+				            -- Ivar Aasen
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2020 AND [QuarterNum]=1 THEN 1350000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2020 AND [QuarterNum]=2 THEN 1270000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2020 AND [QuarterNum]=3 THEN 1770000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2020 AND [QuarterNum]=4 THEN 920000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2021 AND [QuarterNum]=1 THEN 1350000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2021 AND [QuarterNum]=2 THEN 1270000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2021 AND [QuarterNum]=3 THEN 1288000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2021 AND [QuarterNum]=4 THEN 1288000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2022 AND [QuarterNum]=1 THEN 913000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2022 AND [QuarterNum]=2 THEN 913000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2022 AND [QuarterNum]=3 THEN 1643000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2022 AND [QuarterNum]=4 THEN 1643000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2023 AND [QuarterNum]=1 THEN 2000000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2023 AND [QuarterNum]=2 THEN 500000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2023 AND [QuarterNum]=3 THEN 1000000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2023 AND [QuarterNum]=4 THEN 1000000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2024 AND [QuarterNum]=1 THEN 1175000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2024 AND [QuarterNum]=2 THEN 1175000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2024 AND [QuarterNum]=3 THEN 875000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2024 AND [QuarterNum]=4 THEN 875000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2025 THEN 2375000
+				            WHEN Field = 'Ivar Aasen' AND [YearNum]=2026 THEN 3400000
+				            -- Edvard Grieg
+				            WHEN Field = 'Edvard Grieg' AND [YearNum]=2022 AND [QuarterNum]=1 THEN 1990000
+				            WHEN Field = 'Edvard Grieg' AND [YearNum]=2022 AND [QuarterNum]=2 THEN 2291000
+				            WHEN Field = 'Edvard Grieg' AND [YearNum]=2022 AND [QuarterNum]=3 THEN 1992000
+				            WHEN Field = 'Edvard Grieg' AND [YearNum]=2022 AND [QuarterNum]=4 THEN 2292000
+				            WHEN Field = 'Edvard Grieg' AND [YearNum]=2023 THEN 54000
+				            WHEN Field = 'Edvard Grieg' AND [YearNum]=2024 THEN 1300000
+				            WHEN Field = 'Edvard Grieg' AND [YearNum]=2025 THEN 4711000
+				            WHEN Field = 'Edvard Grieg' AND [YearNum]=2026 THEN 3716000
+				        END AS [Tillatelse flaring]
+				    FROM CTE
+				),
+				t AS (
+				    SELECT 
+				        tf.*,
+				        CASE 
+				            WHEN Field = 'Edvard Grieg' AND [YearNum]=2023 AND [QuarterNum]=1 THEN 1850000
+				            WHEN Field = 'Edvard Grieg' AND [YearNum]=2023 AND [QuarterNum]=2 THEN 1500000
+				            WHEN Field = 'Edvard Grieg' AND [YearNum]=2023 AND [QuarterNum]=3 THEN 1500000
+				            WHEN Field = 'Edvard Grieg' AND [YearNum]=2023 AND [QuarterNum]=4 THEN 1500000
+				            WHEN Field = 'Edvard Grieg' AND [YearNum]=2026 THEN CAST([Tillatelse flaring]*0.9 AS decimal(18,2)) 
+				
+				            WHEN Field = 'Ivar Aasen'   AND [YearNum]=2026 THEN CAST([Tillatelse flaring]*0.9 AS decimal(18,2)) 
+				
+				            WHEN Field = 'Ula'          AND [YearNum]=2023 AND [QuarterNum]=1 THEN 1140000
+				            WHEN Field = 'Ula'          AND [YearNum]=2023 AND [QuarterNum]=2 THEN 1320000
+				            WHEN Field = 'Ula'          AND [YearNum]=2023 AND [QuarterNum]=3 THEN 1690000
+				            WHEN Field = 'Ula'          AND [YearNum]=2023 AND [QuarterNum]=4 THEN 1150000
+				            WHEN Field = 'Ula'          AND [YearNum]=2024 AND [QuarterNum]=1 THEN CAST([Tillatelse flaring]*0.9 AS decimal(18,2))  -- 10% lavere enn tillatelsen
+				            WHEN Field = 'Ula'          AND [YearNum]=2024 AND [QuarterNum]<>1 THEN CAST([Tillatelse flaring]*0.8 AS decimal(18,2)) -- 20% lavere enn tillatelsen
+				            WHEN Field = 'Ula'          AND [YearNum]=2025 THEN CAST([Tillatelse flaring]*0.8 AS decimal(18,2))                   -- 20% lavere enn tillatelsen
+				            WHEN Field = 'Ula'          AND [YearNum]=2026 THEN CAST([Tillatelse flaring]*0.9 AS decimal(18,2))                   -- 10% lavere enn tillatelsen
+				            
+				            WHEN Field = 'Alvheim'      AND [YearNum]=2023 AND [QuarterNum]=1 THEN 1750000
+				            WHEN Field = 'Alvheim'      AND [YearNum]=2023 AND [QuarterNum]=2 THEN 750000
+				            WHEN Field = 'Alvheim'      AND [YearNum]=2023 AND [QuarterNum]=3 THEN 750000
+				            WHEN Field = 'Alvheim'      AND [YearNum]=2023 AND [QuarterNum]=4 THEN 750000
+				            WHEN Field = 'Alvheim'      AND [YearNum]=2025 THEN [Tillatelse flaring] -- lik tillatelsen
+				            WHEN Field = 'Alvheim'      AND [YearNum]=2026 THEN [Tillatelse flaring] -- lik tillatelsen
+				            
+				            WHEN Field = 'Valhall'      AND [YearNum]>2022 THEN CAST([Tillatelse flaring]*0.9 AS decimal(18,2))                  -- 10% lavere enn tillatelsen
+				            
+				            WHEN Field = 'Skarv'        AND [YearNum]=2026 THEN 3000000
+				            
+				            ELSE CAST([Tillatelse flaring] AS decimal(18,2))
+				        END AS [Division]  -- for beregning av KPI per kvartal
+				    FROM Tillatelse_flaring tf
+				),
+				flaring_qtd AS (
+				    SELECT 
+				        t.*,
+				        CASE 
+				            WHEN [QuarterNum]=1 AND [YearNum]<2025 THEN CAST(t.[Division] * [MonthNum]/3       AS decimal(18,2))
+				            WHEN [QuarterNum]=2 AND [YearNum]<2025 THEN CAST(t.[Division] * ([MonthNum]-3)/3  AS decimal(18,2))
+				            WHEN [QuarterNum]=3 AND [YearNum]<2025 THEN CAST(t.[Division] * ([MonthNum]-6)/3  AS decimal(18,2))
+				            WHEN [QuarterNum]=4 AND [YearNum]<2025 THEN CAST(t.[Division] * ([MonthNum]-9)/3  AS decimal(18,2))
+				            WHEN [YearNum]>2024                     THEN CAST(t.[Division] * ([MonthNum])/12  AS decimal(18,2))
+				        END AS [KPI flaring]  -- KPI QTD
+				    FROM t
+				),
+				TillatelseFlaring_KPInox AS (
+				    SELECT 
+				        qtd.*,
+				        CAST(
+				            CASE  -- NOX tillatelse
+				                
+				                WHEN Field = 'Valhall' AND Facility  = 'VALHALL PH' AND [YearNum]=2026                      THEN 75
+				                WHEN Field = 'Valhall' AND Facility  <> 'VALHALL PH' AND [YearNum]=2026                      THEN 780
+				                WHEN Field = 'Valhall' AND Facility <> 'VALHALL PH' AND Facility <> 'Hod A'                 THEN 780
+				                WHEN Field = 'Valhall' AND Facility  = 'VALHALL PH' AND [YearNum]<2024                      THEN 320
+				                WHEN Field = 'Valhall' AND Facility  = 'VALHALL PH' AND [YearNum]>2023                      THEN 75
+				                
+				                WHEN Facility = 'Hod A'                                                                     THEN 11
+				                
+				                WHEN Field = 'Ula' AND Facility = 'ULA PP' AND [YearNum]<2023                               THEN 1159
+				                WHEN Field = 'Ula' AND Facility = 'ULA PP' AND [YearNum]>2022                               THEN 655
+				                WHEN Field = 'Ula' AND Facility <> 'ULA PP' AND [YearNum]>2022                              THEN 496
+				                
+				                WHEN Field = 'Edvard Grieg' AND [YearNum]<2023                                              THEN 321
+				                WHEN Field = 'Edvard Grieg' AND [YearNum]=2023                                              THEN 144
+				                WHEN Field = 'Edvard Grieg' AND Facility = 'Edvard Grieg' AND [YearNum]=2026                    THEN 56
+				                WHEN Field = 'Edvard Grieg' AND Facility <> 'Edvard Grieg' AND [YearNum]=2026                   THEN 168
+				                WHEN Field = 'Edvard Grieg' AND Facility <> 'Edvard Grieg' AND [YearNum]>2022               THEN 117
+				                WHEN Field = 'Edvard Grieg' AND Facility  = 'Edvard Grieg' AND [YearNum]>2022               THEN 56
+				
+				                WHEN Field = 'Skarv' AND Facility = 'Skarv FPSO' AND [YearNum]=2026                         THEN 400
+				                WHEN Field = 'Skarv' AND Facility <> 'Skarv FPSO' AND [YearNum]=2026                        THEN 598                
+				                WHEN Field = 'Skarv' AND Facility = 'Skarv FPSO'                                            THEN 340
+				                WHEN Field = 'Skarv' AND Facility <> 'Skarv FPSO'                                           THEN 396
+				                
+				                WHEN Field = 'Alvheim' AND Facility = 'Alvheim FPSO'                                        THEN 360
+				                WHEN Field = 'Alvheim' AND Facility <> 'Alvheim FPSO'                                       THEN 662
+				                                
+				                WHEN Field = 'Ivar Aasen' AND Facility = 'Ivar Aasen' AND [YearNum]=2026                    THEN 293
+				                WHEN Field = 'Ivar Aasen' AND Facility <> 'Ivar Aasen' AND [YearNum]=2026                   THEN 352
+				                
+				                WHEN Field = 'Ivar Aasen' AND Facility = 'Ivar Aasen'                                       THEN 293
+				                WHEN Field = 'Ivar Aasen' AND Facility <> 'Ivar Aasen' AND [YearNum]<2023                   THEN 66
+				                WHEN Field = 'Ivar Aasen' AND Facility <> 'Ivar Aasen' AND [YearNum]>2022                   THEN 170
+				                WHEN Field = 'Ivar Aasen' AND Facility = 'Ivar Aasen'                                       THEN 293
+				                WHEN Field = 'Ivar Aasen' AND Facility <> 'Ivar Aasen' AND [YearNum]<2023                   THEN 66
+				                WHEN Field = 'Ivar Aasen' AND Facility <> 'Ivar Aasen' AND [YearNum]=2026                   THEN 352
+				
+				            END AS float
+				        ) AS [Tillatelse NOx]
+				    FROM flaring_qtd qtd
+				),
+				KPI_NOx_CO2boe AS (
+				    SELECT 
+				        tfk.*,
+				        -- NOx KPI pr mnd
+				        CAST(
+				            CASE
+				                
+				                WHEN (Field = 'Alvheim' AND Facility = 'Alvheim FPSO' AND [YearNum]=2026)                              THEN ([Tillatelse NOx]/12 * [MonthNum] * 0.9)
+				                WHEN (Field = 'Alvheim' AND Facility <> 'Alvheim FPSO' AND [YearNum]=2026)                             THEN 0
+				                WHEN (Field = 'Alvheim' AND Facility <> 'Alvheim FPSO' AND [YearNum]>2024)                           THEN (200*[MonthNum]/CONVERT(decimal(4,2),12))           -- KPI 200
+				                WHEN (Field = 'Alvheim' AND Facility <> 'Alvheim FPSO' AND [YearNum]<2025)                           THEN ([Tillatelse NOx]/12 * [MonthNum])
+				                WHEN (Field = 'Alvheim' AND Facility  = 'Alvheim FPSO')                                              THEN ([Tillatelse NOx]/12 * [MonthNum])
+				                
+				                WHEN Field = 'Ivar Aasen' AND Facility = 'Ivar Aasen' AND [YearNum]=2026                             THEN (10.0/12.0 * [MonthNum])
+				                WHEN Field = 'Ivar Aasen' AND Facility <> 'Ivar Aasen' AND [YearNum]=2026                            THEN (120.0/12.0 * [MonthNum])
+				                
+				                WHEN Field = 'Edvard Grieg' AND Facility = 'Edvard Grieg' AND [YearNum]=2026                         THEN (25.0/12.0 * [MonthNum])
+				                WHEN Field = 'Edvard Grieg' AND Facility <> 'Edvard Grieg' AND [YearNum]=2026                        THEN (120.0/12.0 * [MonthNum])
+				                
+				                WHEN Field = 'Skarv' AND Facility = 'Skarv FPSO' AND [YearNum]=2026                                   THEN ([Tillatelse NOx]/12 * [MonthNum] * 0.9)
+				                WHEN Field = 'Skarv' AND Facility <> 'Skarv FPSO' AND [YearNum]=2026                                  THEN  (538.0/12.0 * [MonthNum])
+				                
+				                WHEN (Field = 'Valhall' AND [YearNum]>2022 AND [YearNum]<2025)                                        THEN ([Tillatelse NOx]/12 * [MonthNum] * 0.9)            -- 10% lavere
+				                WHEN (Field = 'Valhall' AND Facility = 'VALHALL PH' AND [YearNum]=2025)                               THEN (50*[MonthNum]/CONVERT(decimal(4,2),12))             -- 50 tonn
+				                WHEN (Field = 'Valhall' AND Facility <> 'VALHALL PH' AND [YearNum]=2025)                              THEN (100*[MonthNum]/CONVERT(decimal(4,2),12))            -- 100 tonn
+				                WHEN (Field = 'Valhall' AND Facility = 'VALHALL PH' AND [YearNum]=2026)                               THEN ([Tillatelse NOx]/12 * [MonthNum] * 0.9) 
+				                WHEN (Field = 'Valhall' AND Facility <> 'VALHALL PH' AND [YearNum]=2026)                              THEN ([Tillatelse NOx]/12 * [MonthNum] * 0.9)
+				
+				
+				                WHEN Field = 'Ula' AND Facility = 'ULA PP' AND [YearNum]=2026                               THEN 430
+				                WHEN Field = 'Ula' AND Facility <> 'ULA PP' AND [YearNum]=2026                              THEN 0                
+				                WHEN (Field = 'Ula' AND [YearNum]>2022)                                                                THEN ([Tillatelse NOx]/12 * [MonthNum] * 0.9)            -- 10% lavere
+				                
+				                WHEN (Field = 'Hod' AND [YearNum]>2022)                                                                THEN ([Tillatelse NOx]/12 * [MonthNum] * 0.9)            -- 10% lavere
+				                
+				                WHEN (Field = 'Skarv' AND [YearNum]=2026)                                                               THEN 360 
+				
+				                WHEN (Field = 'Skarv' OR (Field = 'Ivar Aasen' AND [YearNum]<>2026) OR (Field='Edvard Grieg' AND [YearNum]<>2026) )  THEN ([Tillatelse NOx]/12 * [MonthNum])
+				            END AS float
+				        ) AS [KPI NOx],
+				
+				        -- CO2 (tonn) KPI pr mnd (note: you compared strings '2021' etc.; using numbers is more robust)
+				        CAST(
+				            CASE
+				                WHEN Field='Valhall' AND [YearNum]=2021 AND [MonthNum]>=5            THEN 1.4
+				                WHEN Field='Valhall' AND [YearNum]=2021 AND [MonthNum]<=5            THEN 0.95
+				                WHEN Field='Valhall' AND [YearNum]=2020                               THEN 1.4
+				                WHEN Field='Valhall' AND [YearNum]=2021 AND [YearNum]<2024            THEN 1.6
+				                WHEN Field='Valhall' AND [YearNum]=2024                               THEN 1.8
+				                WHEN Field='Valhall' AND [YearNum]=2025                               THEN (28000.0/12.0 * [MonthNum])
+				                WHEN Field='Valhall' AND [YearNum]=2026                               THEN (25000.0/12.0 * [MonthNum])
+				
+				                WHEN Field='Ula'     AND [YearNum]=2020                               THEN 17.5
+				                WHEN Field='Ula'     AND [YearNum]=2021                               THEN 19.15
+				                WHEN Field='Ula'     AND [YearNum]=2022                               THEN 30
+				                WHEN Field='Ula'     AND [YearNum]=2023                               THEN 29.5
+				                WHEN Field='Ula'     AND [YearNum]=2024                               THEN 54.2
+				                WHEN Field='Ula'     AND [YearNum]=2025                               THEN (153900.0/12.0 * [MonthNum])
+				                WHEN Field='Ula'     AND [YearNum]=2026                               THEN (140383.0/12.0 * [MonthNum]) 
+				
+				                WHEN Field='Skarv'   AND [YearNum]<2021                               THEN 11.7
+				                WHEN Field='Skarv'   AND [YearNum]>2020 AND [YearNum]<2023            THEN 8
+				                WHEN Field='Skarv'   AND [YearNum]=2023                               THEN 5.9
+				                WHEN Field='Skarv'   AND [YearNum]=2024                               THEN 6.4
+				                WHEN Field='Skarv'   AND [YearNum]=2025                               THEN (368000.0/12.0 * [MonthNum])
+				                WHEN Field='Skarv'   AND [YearNum]=2026                               THEN (351000.0/12.0 * [MonthNum])
+				
+				                WHEN Field='Alvheim' AND [YearNum]=2020                               THEN 7
+				                WHEN Field='Alvheim' AND [YearNum]=2021                               THEN 8.5
+				                WHEN Field='Alvheim' AND [YearNum]=2022                               THEN 9.5
+				                WHEN Field='Alvheim' AND [YearNum]=2023                               THEN 9.5
+				                WHEN Field='Alvheim' AND [YearNum]=2024                               THEN 7.6
+				                WHEN Field='Alvheim' AND [YearNum]=2025                               THEN (171000.0/12.0 * [MonthNum])
+				                WHEN Field='Alvheim' AND [YearNum]=2026                               THEN (174000.0/12.0 * [MonthNum])
+				
+				                WHEN Field='Ivar Aasen' AND [YearNum]=2020                            THEN 1
+				                WHEN Field='Ivar Aasen' AND [YearNum]=2021                            THEN 0.9
+				                WHEN Field='Ivar Aasen' AND [YearNum]=2022                            THEN 1
+				                WHEN Field='Ivar Aasen' AND [YearNum]=2023                            THEN 1.8
+				                WHEN Field='Ivar Aasen' AND [YearNum]=2024                            THEN 1.24
+				                WHEN Field='Ivar Aasen' AND [YearNum]=2025                            THEN (22000.0/12.0 * [MonthNum])
+				                WHEN Field='Ivar Aasen' AND [YearNum]=2026                            THEN (25000.0/12.0 * [MonthNum])
+				
+				                WHEN Field='Edvard Grieg' AND [YearNum]=2022                          THEN 5
+				                WHEN Field='Edvard Grieg' AND [YearNum]=2023                          THEN 1.7
+				                WHEN Field='Edvard Grieg' AND [YearNum]=2024                          THEN 1.14
+				                WHEN Field='Edvard Grieg' AND [YearNum]=2025                          THEN (45000.0/12.0 * [MonthNum])
+				                WHEN Field='Edvard Grieg' AND [YearNum]=2026                          THEN (26000.0/12.0 * [MonthNum])
+				            END AS float
+				        ) AS [KPI CO2 tonn],
+				
+				        -- Vented gas calc
+				        ([CH4 Emissions] + [NMVOC Emissions]) / 1000.0 AS [Cold ventilated gas],
+				
+				        -- Permits
+				        CASE
+				            WHEN Field='Ivar Aasen'                         THEN 97
+				            WHEN Field='Alvheim' AND [YearNum]<2025         THEN 477
+				            WHEN Field='Alvheim' AND [YearNum]=2025         THEN 263
+				            WHEN Field='Skarv'   AND [YearNum]<2025         THEN 2688
+				            WHEN Field='Skarv'   AND [YearNum]=2025         THEN 109
+				            WHEN Field='Edvard Grieg' AND [YearNum]=2022 AND [QuarterNum]=1 THEN 52000
+				            WHEN Field='Edvard Grieg' AND [YearNum]=2022 AND [QuarterNum]=2 THEN 59000
+				            WHEN Field='Edvard Grieg' AND [YearNum]=2022 AND [QuarterNum]=3 THEN 52000
+				            WHEN Field='Edvard Grieg' AND [YearNum]=2022 AND [QuarterNum]=4 THEN 58000
+				            WHEN Field='Edvard Grieg' AND [YearNum]=2023 THEN 54000
+				            WHEN Field='Valhall'      AND [YearNum]=2025 THEN 18000
+				            WHEN Field='Edvard Grieg' AND [YearNum]=2026 THEN 54000
+				            ELSE NULL
+				        END AS [Permit Cold ventilated gas],
+				
+				        CASE
+				            WHEN Field = 'Valhall' AND Facility <> 'VALHALL PH' AND Facility <> 'Hod A' THEN 90
+				            WHEN Field = 'Valhall' AND Facility  = 'VALHALL PH'                         THEN 81
+				            WHEN Field='Ivar Aasen' AND Facility = 'Ivar Aasen'                          THEN 9
+				            WHEN Field='Ivar Aasen' AND Facility <> 'Ivar Aasen'                         THEN 21
+				            WHEN Field='Alvheim' AND [YearNum]<2025                                     THEN 62
+				            WHEN Field='Alvheim' AND [YearNum]=2025                                     THEN 162
+				            WHEN Field='Skarv'   AND Facility = 'Skarv FPSO' AND [YearNum]<2025              THEN 21.8
+				            WHEN Field='Skarv'   AND Facility = 'Skarv FPSO' AND [YearNum]<2025              THEN 21.8            
+				            WHEN Field='Skarv'   AND Facility <> 'Skarv FPSO' AND [YearNum]<2025              THEN 45
+				            WHEN Field='Skarv'   AND Facility <> 'Skarv FPSO' AND [YearNum]=2025             THEN 40
+				            WHEN Field='Skarv'   AND Facility <> 'Skarv FPSO' AND [YearNum]=2026             THEN 68.8
+				            WHEN Field='Edvard Grieg'                                                  THEN 127
+				            WHEN Field='Edvard Grieg' AND Facility <> 'Edvard Grieg'                    THEN 19
+				            WHEN Field='Ula'                                                           THEN 195
+				            ELSE NULL
+				        END AS [Permit nmVOC]
+				    FROM TillatelseFlaring_KPInox tfk
+				),
+				t2 AS (
+				    SELECT 
+				        k.*,
+				        [Permit Cold ventilated gas]/12.0 * [MonthNum] AS [KPI Cold ventilated gas],
+				        CASE
+				            WHEN Field='Valhall' AND [YearNum]>2023 THEN [Permit nmVOC]/12.0 * [MonthNum] * 0.9
+				            WHEN Field='Alvheim' AND [YearNum]>2023 THEN 100.0/12.0 * [MonthNum]
+				            WHEN Field='Skarv'   AND [YearNum]=2024 THEN 40.0/12.0  * [MonthNum]
+				            WHEN Field='Skarv'   AND [YearNum]=2026 THEN 62.0/12.0  * [MonthNum]
+				            WHEN Field='Edvard Grieg' AND Facility <> 'Edvard Grieg' AND [YearNum]=2026 THEN 23.0/12.0  * [MonthNum]
+				            ELSE [Permit nmVOC]/12.0 * [MonthNum]
+				        END AS [KPI nmVOC],
+				        CONCAT_WS('_', k.Field, k.Facility) AS [loc_key]
+				    FROM KPI_NOx_CO2boe k
+				)
+				
+				SELECT 
+				    t2.*,
+				    t2.[YearNum]    AS [Year],      -- compatibility alias
+				    t2.[QuarterNum] AS [Quarter],   -- compatibility alias
+				    t2.[MonthNum]   AS [Month]      -- compatibility alias
+				FROM t2
+				ORDER BY Time_Id DESC;
+				
+				"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source, {{"Time_Id", type date}}),
+				    #"Rounded Up" = Table.TransformColumns(#"Changed Type",{{"KPI flaring", Number.RoundUp, Int64.Type}}),
+				    #"Sammenslått kolonne satt inn" = Table.AddColumn(#"Rounded Up", "loc_key.1", each Text.Combine({[loc_key], Text.From([Year], "nb-NO")}, "_"), type text),
+				    #"Erstattet verdi" = Table.ReplaceValue(#"Sammenslått kolonne satt inn"," ","",Replacer.ReplaceText,{"loc_key.1"}),
+				    #"Tekst med små bokstaver" = Table.TransformColumns(#"Erstattet verdi",{{"loc_key.1", Text.Lower, type text}}),
+				    #"Fjernede kolonner" = Table.RemoveColumns(#"Tekst med små bokstaver",{"loc_key"}),
+				    #"Kolonner med nye navn" = Table.RenameColumns(#"Fjernede kolonner",{{"loc_key.1", "loc_key"}})
+				in
+				    #"Kolonner med nye navn"
+				```
+
+	changedProperty = IsHidden
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigasjon
+

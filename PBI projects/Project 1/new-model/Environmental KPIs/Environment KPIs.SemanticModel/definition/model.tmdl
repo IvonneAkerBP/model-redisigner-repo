@@ -1,0 +1,40 @@
+model Model
+	culture: nb-NO
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		fastCombine
+		legacyRedirects
+		returnErrorValuesAsNull
+
+queryGroup Date
+
+	annotation PBI_QueryGroupOrder = 0
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_QueryOrder = ["Location","Location (2)","HistoricalAirRef","HistoricalSeaRef","CombinedAirRef","CombinedSeaRef","Oily water","CH4_NMVOC","Kaldvent volum","Dim_Date","Emissions to air","Emissions to air CO2 Hod","Location3","Radioaktive isotoper","dbt_gold_nems_emission fact_nems__permit_kpi_to_air","dbt_gold_nems_emission fact_nems__permit_kpi_to_sea"]
+
+annotation __TEdtr = 1
+
+annotation PBI_ProTooling = ["DevMode","TMDL-Extension","MCP-PBIModeling"]
+
+ref table DateTableTemplate_0c67aad8-4c8b-4316-b607-5e4077864b4a
+ref table Location
+ref table 'Oily water'
+ref table CH4_NMVOC
+ref table 'Kaldvent volum'
+ref table Dim_Date
+ref table LocalDateTable_310cc86e-a4fb-4c5f-9c7a-899b34108c9b
+ref table LocalDateTable_c9eb5cc9-e889-46b0-aa6b-7908e4991b7f
+ref table 'Emissions to air'
+ref table 'Emissions to air CO2 Hod'
+ref table LocalDateTable_8d0aa2be-f91f-4c93-8cb7-7ee873420428
+ref table Location3
+ref table 'Radioaktive isotoper'
+ref table LocalDateTable_343e897d-4fc1-41b4-96ce-9acd5046d5ca
+ref table 'dbt_gold_nems_emission fact_nems__permit_kpi_to_air'
+ref table 'dbt_gold_nems_emission fact_nems__permit_kpi_to_sea'
+
+ref cultureInfo nb-NO
+

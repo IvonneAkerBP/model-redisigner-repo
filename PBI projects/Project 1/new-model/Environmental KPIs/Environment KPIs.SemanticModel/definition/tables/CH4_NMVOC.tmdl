@@ -1,0 +1,271 @@
+table CH4_NMVOC
+	lineageTag: cbe3aee4-f83d-498d-ac6d-de584b7e0133
+
+	measure 'Common And Vented CH4 (kg) YTD' =
+			
+			IF(
+				ISFILTERED('Dim_Date'[Date]),
+				ERROR("Time intelligence quick measures can only be grouped or filtered by the Power BI-provided date hierarchy or primary date column."),
+				TOTALYTD(SUM('CH4_NMVOC'[CH4 Emissions (tonne)]), 'Dim_Date'[Date])
+			)
+		lineageTag: aeb956f9-9b9f-4b18-8b4b-ad102d6aca86
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Common And Vented NMVOC (tonne) YTD' =
+			
+			IF(
+				ISFILTERED('Dim_Date'[Date]),
+				ERROR("Time intelligence quick measures can only be grouped or filtered by the Power BI-provided date hierarchy or primary date column."),
+				TOTALYTD(SUM('CH4_NMVOC'[nmVOC Emissions (tonne)]), 'Dim_Date'[Date])
+			)
+		lineageTag: e9aca34a-09c6-4a91-8c15-65bbd6c6ef1e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'nmVOC KPI year' = CALCULATE(MAX(CH4_NMVOC[Tillatelse nmVOC])*0.9,(CH4_NMVOC[field]  IN {"Ula"})) + CALCULATE(MAX(CH4_NMVOC[Tillatelse nmVOC]), NOT (CH4_NMVOC[field]  IN {"Ula"}))
+		lineageTag: 39f87971-f22d-4549-9b0c-623ae2857dab
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'CH4 KPI year' = CALCULATE(MAX(CH4_NMVOC[Tillatelse CH4])*0.9,(CH4_NMVOC[field]  IN {"Ula"})) + CALCULATE(MAX(CH4_NMVOC[Tillatelse CH4]), NOT (CH4_NMVOC[field]  IN {"Ula"}))
+		lineageTag: 927862a8-8b5d-4589-8715-047a5dea3124
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'nmVOC_cold_KPI year' = MAX(CH4_NMVOC[KPI nmVOC])*12/MONTH(LASTDATE(CH4_NMVOC[Date]))
+		lineageTag: 65fb6664-904a-42ee-99e4-ce52eeb9f4d2
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'CH4_year KPI' = MAX(CH4_NMVOC[KPI CH4])*12/MONTH(LASTDATE(CH4_NMVOC[Date]))
+		lineageTag: a17f02f1-5e4a-4f8a-a7ea-c12d86fc7def
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 2c8c0f9d-a49b-4e5d-a50f-18759857a77b
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column field
+		dataType: string
+		lineageTag: df209e9c-e20d-4b3a-a61a-e577fb8821ad
+		summarizeBy: none
+		sourceColumn: field
+
+		annotation SummarizationSetBy = Automatic
+
+	column facility
+		dataType: string
+		lineageTag: 99c7ff38-522e-4573-bac6-74c4864eaf80
+		summarizeBy: none
+		sourceColumn: facility
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'nmVOC Emissions (tonne)'
+		dataType: double
+		lineageTag: c521b55f-743c-485a-8ed3-93fae065dc2b
+		summarizeBy: sum
+		sourceColumn: nmVOC Emissions (tonne)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column loc_key
+		dataType: string
+		lineageTag: 00c78f4a-9454-43dc-a4ba-c09d88419a32
+		summarizeBy: none
+		sourceColumn: loc_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Tillatelse CH4'
+		dataType: double
+		formatString: 0
+		lineageTag: 574c10d5-b43f-42f2-8d0f-ec23a32c2206
+		summarizeBy: sum
+		sourceColumn: Tillatelse CH4
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: int64
+		formatString: 0
+		lineageTag: d0966bf9-f981-4736-9784-5caaa2e912fe
+		summarizeBy: sum
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'KPI CH4'
+		dataType: double
+		lineageTag: a2ff63a6-0a18-4fef-ac49-38e2fa79ffcd
+		summarizeBy: sum
+		sourceColumn: KPI CH4
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'CH4 Emissions (tonne)'
+		dataType: double
+		lineageTag: 8f2ad489-f490-477b-b555-12a5322bdd73
+		summarizeBy: sum
+		sourceColumn: CH4 Emissions (tonne)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 13dd82e7-6585-4d4c-a0d3-7ce88bcb96a9
+		summarizeBy: sum
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Tillatelse nmVOC'
+		dataType: double
+		lineageTag: 79689012-ad3c-4f9c-8bc4-55333b2367c1
+		summarizeBy: sum
+		sourceColumn: Tillatelse nmVOC
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'KPI nmVOC'
+		dataType: double
+		lineageTag: 67682e11-0c13-47b7-816a-8c3fe6f7d09d
+		summarizeBy: sum
+		sourceColumn: KPI nmVOC
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition CH4_NMVOC-187efb84-7c1f-4cf8-9b70-a5f1ea7776ef = m
+		mode: import
+		source = ```
+				let
+				    Source = Sql.Database(
+				        "obax4o2iqosevp5oa2r6dbtune-2dhddioar5aebauc4huzjvnrve.datawarehouse.fabric.microsoft.com",
+				        "wh_gold_hsseq",
+				        [Query = "
+				
+				WITH cte_hydro AS (
+				    SELECT 
+				        CAST([date] AS date)                             AS [Date],
+				        [field],
+				        [facility],
+				        [common_and_vented_ch4_kg]/1000                       AS [CH4 Emissions (tonne)],
+				        [common_and_vented_nmvoc_kg]/1000                     AS [nmVOC Emissions (tonne)],
+				        CONCAT(REPLACE([field], 'PL 001B Ivar Aasen', 'Ivar Aasen'), '_', [facility], '_', YEAR([date])) AS [loc_key],
+				        -- Unit 3B Phase B: [Tillatelse nmVOC] removed from SQL (sourced from CombinedAirRef)
+				        MONTH([date])                                    AS [Month],
+				        YEAR([date])                                     AS [Year]
+				    FROM [dbt_gold_nems_environment_kpi].[fact_nems__hydrocarbon_gas_emissions_ctt]
+				    WHERE 
+				    fabric_valid_to_date = '9999-12-31 00:00:00.000000'
+				),
+				cte_combustion AS (
+				    SELECT 
+				        CAST([date] AS date)                             AS [Date]
+				       ,[field]
+				       ,[facility]
+				       ,[ch4_emissions_tonnes]/1000                           AS [CH4 Emissions (tonne)]
+				       ,[nm_voc_emissions_tonnes]/1000                        AS [nmVOC Emissions (tonne)]
+				       ,CONCAT(REPLACE([field], 'PL 001B Ivar Aasen', 'Ivar Aasen'), '_', [facility]) AS [loc_key]
+				       -- Unit 3B Phase B: [Tillatelse nmVOC] CAST(41) removed (DR006 defect correction)
+				       ,MONTH([date])                                    AS [Month]
+				       ,YEAR([date])                                     AS [Year]
+				    FROM [dbt_gold_nems_environment_kpi].[fact_nems__environment_kpi_combustion_ctt]
+				    WHERE CAST([date] AS date) > '2020-12-31' AND  
+				    fabric_valid_to_date = '9999-12-31 00:00:00.000000'
+				)
+				
+				-- Branch 1 (hydro): Unit 3B Phase B: [KPI nmVOC] removed (sourced from CombinedAirRef)
+				SELECT 
+				    t.*
+				FROM cte_hydro AS t
+				
+				UNION ALL
+				
+				-- Branch 2 (combustion): Unit 3B Phase B: [KPI nmVOC] removed (sourced from CombinedAirRef)
+				SELECT 
+				    t.*
+				FROM cte_combustion AS t
+				"]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Date", type date}}),
+				    #"Erstattet verdi" = Table.ReplaceValue(#"Changed Type"," ","",Replacer.ReplaceText,{"loc_key"}),
+				    #"Tekst med små bokstaver" = Table.TransformColumns(#"Erstattet verdi",{{"loc_key", Text.Lower, type text}}),
+				    #"Added Mapped Field" = Table.AddColumn(
+				        #"Tekst med små bokstaver",
+				        "_MappedField",
+				        each if [field] = "PL 001B Ivar Aasen" then "Ivar Aasen" else [field],
+				        type text
+				    ),
+				    #"Merged CombinedAirRef" = Table.NestedJoin(
+				        #"Added Mapped Field", {"_MappedField", "Year"},
+				        CombinedAirRef, {"field", "year"},
+				        "_CombinedAirRef", JoinKind.LeftOuter
+				    ),
+				    #"Expanded Annual" = Table.ExpandTableColumn(
+				        #"Merged CombinedAirRef", "_CombinedAirRef",
+				        {"MainField CH4 permit", "MainField CH4 KPI",
+				         "CH4 NMVOC Vent Permit", "CH4 NMVOC Vent KPI"},
+				        {"_CH4PermitAnnual",     "_CH4KPIAnnual",
+				         "_VentPermitAnnual",    "_VentKPIAnnual"}
+				    ),
+				    #"Added Tillatelse CH4" = Table.AddColumn(
+				        #"Expanded Annual",
+				        "Tillatelse CH4",
+				        each [_CH4PermitAnnual],
+				        type number
+				    ),
+				    #"Added KPI CH4" = Table.AddColumn(
+				        #"Added Tillatelse CH4",
+				        "KPI CH4",
+				        each [_CH4KPIAnnual] / 12 * [Month],
+				        type number
+				    ),
+				    #"Added Tillatelse nmVOC REF" = Table.AddColumn(
+				        #"Added KPI CH4",
+				        "Tillatelse nmVOC REF",
+				        each [_VentPermitAnnual],
+				        type number
+				    ),
+				    #"Added KPI nmVOC REF" = Table.AddColumn(
+				        #"Added Tillatelse nmVOC REF",
+				        "KPI nmVOC REF",
+				        each [_VentKPIAnnual] / 12 * [Month],
+				        type number
+				    ),
+				    #"Removed Temp" = Table.RemoveColumns(
+				        #"Added KPI nmVOC REF",
+				        {"_CH4PermitAnnual", "_CH4KPIAnnual",
+				         "_VentPermitAnnual", "_VentKPIAnnual",
+				         "_MappedField"}),
+				    // Unit 3B Phase B — rename REF staging columns to final column names (DR005, DR006)
+				    #"Renamed nmVOC" = Table.RenameColumns(
+				        #"Removed Temp",
+				        {{"Tillatelse nmVOC REF", "Tillatelse nmVOC"}, {"KPI nmVOC REF", "KPI nmVOC"}})
+				in
+				    #"Renamed nmVOC"
+				```
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigasjon
+

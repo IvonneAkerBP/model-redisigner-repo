@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "505ae6ddef3d17e93d7d",
+  "position": {
+    "x": 14.297872340425533,
+    "y": 147.06382978723406,
+    "z": 22000,
+    "height": 267.57446808510639,
+    "width": 471.82978723404256,
+    "tabOrder": 8000
+  },
+  "visualGroup": {
+    "displayName": "flare",
+    "groupMode": "ScaleMode"
+  },
+  "isHidden": true
+}

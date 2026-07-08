@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "e66e6497b903da91ca27",
+  "position": {
+    "x": 1447.6339285714284,
+    "y": 209.60951721408784,
+    "z": 52062,
+    "height": 401.81717451523548,
+    "width": 497.16272377518914,
+    "tabOrder": 2000
+  },
+  "visualGroup": {
+    "displayName": "noxrig",
+    "groupMode": "ScaleMode"
+  },
+  "isHidden": true
+}

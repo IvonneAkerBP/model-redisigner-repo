@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "9e04918b6fbc4057de9b",
+  "position": {
+    "x": 14.464285714285715,
+    "y": 671.38392857142856,
+    "z": 14000,
+    "height": 267.58928571428572,
+    "width": 471.29464285714289,
+    "tabOrder": 34000
+  },
+  "visualGroup": {
+    "displayName": "Radium 226",
+    "groupMode": "ScaleMode"
+  },
+  "isHidden": true
+}

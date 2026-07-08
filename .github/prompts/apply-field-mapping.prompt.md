@@ -14,16 +14,16 @@ field mapping file. Only process visuals on visible pages. Never touch old-model
 
 ### Step 1 — Read the mapping file
 
-Read `mappings/field-mapping.csv`. It has four columns:
+Read `data references/Input til PowerBI.xlsx`. Each sheet corresponds to a Fabric table
+and defines the columns available in the new model. Use this to identify:
 
-| Column | Meaning |
+| What to find | Where to look |
 |---|---|
-| `Old column name` | The `Property` value used in the old-model visual |
-| `Old table name` | The `Entity` value used in the old-model visual |
-| `New column name` | The replacement `Property` value for the new-model visual |
-| `New table name` | The replacement `Entity` value for the new-model visual |
+| New table names | Sheet names (each sheet = one Fabric table) |
+| New column names | Column headers within each sheet |
+| Old-to-new mapping | Compare old-model field names to the corresponding sheet columns |
 
-Parse every row. Ignore blank rows or header-only files.
+Read all relevant sheets. Ignore sheets that do not correspond to tables used in the report.
 
 ### Step 2 — Identify the target project
 
@@ -102,5 +102,5 @@ After writing, list:
 - **Never modify semantic model files** (TMDL, `.dataset`, model JSON)
 - **Only process visuals on visible pages** — skip hidden pages entirely
 - **Confirm before every write** — no silent changes
-- **If the mapping CSV is missing or empty**, stop and tell the user to place it at
-  `mappings/field-mapping.csv` before running this prompt
+- **If `data references/Input til PowerBI.xlsx` is missing or unreadable**, stop and ask
+  the user to verify the file is present before running this prompt

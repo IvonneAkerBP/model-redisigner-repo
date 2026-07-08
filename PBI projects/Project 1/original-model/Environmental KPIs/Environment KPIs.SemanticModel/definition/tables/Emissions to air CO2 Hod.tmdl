@@ -1,0 +1,102 @@
+table 'Emissions to air CO2 Hod'
+	lineageTag: b97ffec3-c67f-4a81-b3e1-67623b0530a6
+
+	column Time_Id
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 35acf73f-4326-496a-9f41-250433fd8415
+		summarizeBy: none
+		sourceColumn: Time_Id
+
+		variation Variation
+			isDefault
+			relationship: e466a917-8dca-49fb-a0dd-e451437b9c61
+			defaultHierarchy: LocalDateTable_8d0aa2be-f91f-4c93-8cb7-7ee873420428.Datohierarki
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Field
+		dataType: string
+		lineageTag: 575755da-9b75-4332-a86a-23a328892c88
+		summarizeBy: none
+		sourceColumn: Field
+
+		annotation SummarizationSetBy = Automatic
+
+	column Facility
+		dataType: string
+		lineageTag: 2fa17411-59b7-4d25-b4ab-4eda3865026d
+		summarizeBy: none
+		sourceColumn: Facility
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Emissions Source'
+		dataType: string
+		lineageTag: e756b125-341f-4a67-b6bd-2c4172e894c3
+		summarizeBy: none
+		sourceColumn: Emissions Source
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Stream Subtype'
+		dataType: string
+		lineageTag: aadd644d-d9a7-40f2-903d-adaaaf791dd3
+		summarizeBy: none
+		sourceColumn: Stream Subtype
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Source Details'
+		dataType: string
+		lineageTag: 99de4b94-2b85-41c7-a323-6ac546f92c99
+		summarizeBy: none
+		sourceColumn: Source Details
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'CO2 Emissions'
+		dataType: double
+		lineageTag: 3e719030-42e2-492e-9ba1-98f8dbc24121
+		summarizeBy: sum
+		sourceColumn: CO2 Emissions
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'Emissions to air CO2 Hod-010a302f-f69d-441e-b011-a2b3bf8b6cdc' = m
+		mode: import
+		source = ```
+				let
+				    Source = Sql.Database(
+				        "obax4o2iqosevp5oa2r6dbtune-2dhddioar5aebauc4huzjvnrve.datawarehouse.fabric.microsoft.com",
+				        "wh_gold_hsseq",
+				    
+				    
+				    [Query="SELECT CAST([date] as date) as Time_Id
+					,CASE
+						WHEN field = 'PL 001B Ivar Aasen' then 'Ivar Aasen'
+						ELSE field
+					END as Field
+					,facility as Facility
+					,emissions_source as 'Emissions Source'
+					,stream_subtype as 'Stream Subtype'
+					,[source_details] as 'Source Details'
+					,[co2_emissions_tonnes]*1000 as 'CO2 Emissions'
+				FROM [dbt_gold_nems_environment_kpi].[fact_nems__environment_kpi_emission_to_air_ctt]
+				WHERE 
+				    fabric_valid_to_date = '9999-12-31 00:00:00.000000' "]),
+				    #"Filtered Rows" = Table.SelectRows(Source, each ([Field] = "Hod")),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Filtered Rows",{"Time_Id", type date}),
+				    #"Replaced Value" = Table.ReplaceValue(#"Changed Type","Hod","Valhall",Replacer.ReplaceText,{"Field"})
+				in
+				    #"Replaced Value"
+				```
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigasjon
+

@@ -1,0 +1,102 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "349d19898553922870c8",
+  "position": {
+    "x": 29.179331306990882,
+    "y": 64.194528875379945,
+    "z": 4000,
+    "height": 655.56231003039511,
+    "width": 1250.8206686930091,
+    "tabOrder": 4000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Denne rapporten ble opprettet på initiativ lead ytre miljø Kristin Ravnås, for å effektivisere KPI-rapport som tidligere ble sendt ut manuelt hver måned i excelark. Formålet er at det skal bli enklere å spore tidligere hvor man er i fare for å overskride en tillatelse, og at flere skal kunne monitorere og føle eierskap til denne prosessen. ",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Om oppdateringer:",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontSize": "12pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Dataene i denne rapporten hentes fra NEMS, og \"hardkodet\" kopi fra tillatelsene til Miljødirektoratet i tillegg til interne KPIer. Data hentes fra NEMS og LIMS til datavarehuset - så til rapporten hver dag. Data på radioaktive isotoper hentes fra LIMS, resten av tallene er fra NEMS. Kvalitetssjekk av foregående måned gjøres av fag-ansvarlige ca den 10ende måneden etter. Data inn til NEMS og LIMS gjøres pr nå manuelt på Ula og Valhall, mens Ivar Aasen, Alvheim og delvis Skarv nå får dette automatisk. Tillatelsene oppdateres løpende etter info fra Øivind, Kristin, Linn og Nina. \"Data last updated\" gir siste dato for oppdateringer i NEMS databasen som er hentet inn i rapporten.",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": ""
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Ansvarlige:",
+                    "textStyle": {
+                      "fontWeight": "bold",
+                      "fontSize": "12pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Faglig: Øivind Hille (Alvheim og Skarv), Kristin Ravnås (Ula), Marija Kilibarda (Ivar Aasen) og Linn Marie Deleneuville (Valhall)",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              },
+              {
+                "textRuns": [
+                  {
+                    "value": "Rapport: VCA Team (vca@akerbp.com/sunniva.larsen@akerbop.com)",
+                    "textStyle": {
+                      "fontSize": "11pt"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

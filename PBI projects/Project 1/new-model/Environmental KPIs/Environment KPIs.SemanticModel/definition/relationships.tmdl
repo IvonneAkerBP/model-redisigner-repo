@@ -1,0 +1,65 @@
+relationship b27a0421-1cec-4063-b65e-c94149bd49b6
+	fromColumn: CH4_NMVOC.loc_key
+	toColumn: Location.loc_key
+
+relationship 4d52a31a-8b87-4225-8039-3c99d328fda3
+	fromColumn: 'Kaldvent volum'.loc_key
+	toColumn: Location.loc_key
+
+relationship dbb24099-c279-446b-a6e8-abc006b51562
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Dim_Date.Time_Id
+	toColumn: LocalDateTable_310cc86e-a4fb-4c5f-9c7a-899b34108c9b.Date
+
+relationship 6f5d848f-9009-451d-84db-e0d5d5db1bbe
+	joinOnDateBehavior: datePartOnly
+	fromColumn: Dim_Date.Date
+	toColumn: LocalDateTable_c9eb5cc9-e889-46b0-aa6b-7908e4991b7f.Date
+
+relationship 69672c3e-da5d-46eb-bdb5-9120a6d89cb0
+	fromColumn: 'Kaldvent volum'.Date
+	toColumn: Dim_Date.Date
+
+relationship 8f4e0eae-f593-4191-97af-faa9ff36b782
+	fromColumn: CH4_NMVOC.Date
+	toColumn: Dim_Date.Date
+
+relationship a8c833ec-3659-438d-8059-cf930534b320
+	fromColumn: 'Oily water'.loc_key
+	toColumn: Location.loc_key
+
+relationship 3881f99a-a206-44be-8b9a-1ab323557a85
+	fromColumn: 'Oily water'.Time_Id
+	toColumn: Dim_Date.Date
+
+relationship 6920c09a-4881-44dd-afa6-87b4ca54816d
+	fromColumn: 'Emissions to air'.Time_Id
+	toColumn: Dim_Date.Date
+
+relationship e466a917-8dca-49fb-a0dd-e451437b9c61
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'Emissions to air CO2 Hod'.Time_Id
+	toColumn: LocalDateTable_8d0aa2be-f91f-4c93-8cb7-7ee873420428.Date
+
+relationship 1902a570-ac4a-c96a-2d7a-a77238ebd0b9
+	fromColumn: 'Radioaktive isotoper'.loc_key
+	toColumn: Location.loc_key
+
+relationship 84a9ae7d-3691-4482-9d00-cc1311dff0cc
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'Radioaktive isotoper'.'Update Date'
+	toColumn: LocalDateTable_343e897d-4fc1-41b4-96ce-9acd5046d5ca.Date
+
+relationship 2470e299-09e5-c5e2-c794-479c58f78651
+	fromColumn: 'Radioaktive isotoper'.Date
+	toColumn: Dim_Date.Date
+
+relationship AutoDetected_56c00fed-ddc4-4749-b4e9-88d082bba992
+	fromColumn: 'Emissions to air'.loc_key
+	toColumn: Location.loc_key
+
+relationship b3e35e92-341d-8b08-1722-345967a96955
+	toCardinality: many
+	fromColumn: Location.År
+	toColumn: Dim_Date.Year
+

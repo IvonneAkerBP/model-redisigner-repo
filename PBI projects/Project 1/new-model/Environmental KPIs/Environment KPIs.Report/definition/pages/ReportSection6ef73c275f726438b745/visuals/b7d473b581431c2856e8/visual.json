@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "b7d473b581431c2856e8",
+  "position": {
+    "x": 956.85981308411215,
+    "y": 245.27102803738319,
+    "z": 16000,
+    "height": 674.24299065420564,
+    "width": 978.05607476635521,
+    "tabOrder": 17000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Oily water"
+                    }
+                  },
+                  "Property": "loc_key"
+                }
+              },
+              "queryRef": "Oily water.loc_key",
+              "nativeQueryRef": "loc_key"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

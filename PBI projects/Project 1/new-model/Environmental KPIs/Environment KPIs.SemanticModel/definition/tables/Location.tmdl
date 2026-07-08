@@ -1,0 +1,87 @@
+table Location
+	lineageTag: 8601224b-5dd9-4c1f-914a-e2a03ffd3508
+
+	column Location
+		dataType: string
+		lineageTag: ae015511-842f-48a5-b8e5-422c0a135f3a
+		summarizeBy: none
+		sourceColumn: Location
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Location - Copy'
+		dataType: string
+		lineageTag: 172334e2-080f-4f5e-b1b9-257f34c958c0
+		summarizeBy: none
+		sourceColumn: Location - Copy
+
+		annotation SummarizationSetBy = Automatic
+
+	column loc_key
+		dataType: string
+		lineageTag: e6400494-c227-464f-b3f5-540dc0a0e5cb
+		summarizeBy: none
+		sourceColumn: loc_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column Facility
+		dataType: string
+		lineageTag: 8bd3520f-0757-44df-bbb7-ded468fc57d6
+		summarizeBy: none
+		sourceColumn: Facility
+
+		annotation SummarizationSetBy = Automatic
+
+	column År
+		dataType: string
+		lineageTag: 4faf2fef-58db-45a9-83c0-f530e312c91f
+		summarizeBy: none
+		sourceColumn: År
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Location-076cf714-b1e8-423b-bbf2-dc6899e595e0 = m
+		mode: import
+		source =
+				let
+				    Query2 = #"Emissions to air"[Field], //Bruker assets i emissions to air som utgangspunkt for lokasjons-tabellen
+				    #"Removed Duplicates" = List.Distinct(Query2),
+				    #"Converted to Table" = Table.FromList(#"Removed Duplicates", Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+				    #"Renamed Columns" = Table.RenameColumns(#"Converted to Table",{{"Column1", "Location"}}),
+				    #"Appended Query" = Table.Combine({#"Renamed Columns", #"Location (2)"}),
+				    #"Removed Duplicates1" = Table.Distinct(#"Appended Query"),
+				    #"Duplicated Column" = Table.DuplicateColumn(#"Removed Duplicates1", "Location", "Location - Copy"), //lager ny kolonne for å ha en nøkkelkolonne uten mellomrom da dette skapte problemer
+				    #"Replaced Value" = Table.ReplaceValue(#"Duplicated Column","IvarAasen","Ivar Aasen",Replacer.ReplaceText,{"Location - Copy"}),
+				    #"Trimmet tekst" = Table.TransformColumns(#"Replaced Value",{{"Location - Copy", Text.Trim, type text}}),
+				    #"Merged Queries" = Table.NestedJoin(#"Trimmet tekst", {"Location"}, #"Emissions to air", {"Field"}, "Emissions to air", JoinKind.LeftOuter),
+				    #"Expanded Emissions to air" = Table.ExpandTableColumn(#"Merged Queries", "Emissions to air", {"Facility", "Year"}, {"Facility", "Year"}),
+				    #"Erstattet verdi1" = Table.ReplaceValue(#"Expanded Emissions to air","Tyrving","Alvheim",Replacer.ReplaceText,{"Location"}),
+				    #"Erstattet verdi2" = Table.ReplaceValue(#"Erstattet verdi1","Tyrving","Alvheim",Replacer.ReplaceText,{"Location - Copy"}),
+				    #"Kolonner med nye navn1" = Table.RenameColumns(#"Erstattet verdi2",{{"Year", "År"}}),
+				    #"Tilføyet spørring" = Table.Combine({#"Kolonner med nye navn1", Location3}),
+				    #"Sammenslått kolonne satt inn" = Table.AddColumn(#"Tilføyet spørring", "loc_key", each Text.Combine({[Location], [Facility], Text.From([År], "nb-NO")}, "_"), type text),
+				    #"Duplikater fjernet" = Table.Distinct(#"Sammenslått kolonne satt inn", {"loc_key"}),
+				    #"Tillagt betinget kolonne" = Table.AddColumn(#"Duplikater fjernet", "Facility2", each if [Location] = "Fenris" then [loc_key] else [Facility]),
+				    #"Trakk ut tekst før skilletegn" = Table.TransformColumns(#"Tillagt betinget kolonne", {{"Facility2", each Text.BeforeDelimiter(_, "_", 1), type text}}),
+				    #"Erstattet verdi4" = Table.ReplaceValue(#"Trakk ut tekst før skilletegn","_","/",Replacer.ReplaceText,{"Facility2"}),
+				    #"Fjernede kolonner" = Table.RemoveColumns(#"Erstattet verdi4",{"Facility"}),
+				    #"Kolonner med nye navn" = Table.RenameColumns(#"Fjernede kolonner",{{"Facility2", "Facility"}}),
+				    #"Trimmet tekst1" = Table.TransformColumns(#"Kolonner med nye navn",{{"Location - Copy", Text.Trim, type text}, {"loc_key", Text.Trim, type text}}),
+				    #"Sorted Rows" = Table.Sort(#"Trimmet tekst1",{{"Location", Order.Ascending}}),
+				    #"Erstattet verdi" = Table.ReplaceValue(#"Sorted Rows"," ","",Replacer.ReplaceText,{"loc_key"}),
+				    #"Tekst med små bokstaver" = Table.TransformColumns(#"Erstattet verdi",{{"loc_key", Text.Lower, type text}}),
+				    #"Erstattet verdi3" = Table.ReplaceValue(#"Tekst med små bokstaver","Fenris","Valhall",Replacer.ReplaceText,{"Location - Copy"}),
+				    #"Erstattet verdi5" = Table.ReplaceValue(#"Erstattet verdi3","VALHALL FLANKE VEST","Valhall flanke vest",Replacer.ReplaceText,{"Facility"}),
+				    #"Erstattet verdi6" = Table.ReplaceValue(#"Erstattet verdi5","VALHALL FLANKE SOR","Valhall flanke sør",Replacer.ReplaceText,{"Facility"}),
+				    #"Erstattet verdi7" = Table.ReplaceValue(#"Erstattet verdi6","VALHALL FLANKE NORD","Valhall flanke nord",Replacer.ReplaceText,{"Facility"}),
+				    #"Erstattet verdi8" = Table.ReplaceValue(#"Erstattet verdi7","VALHALL PH","Valhall PH",Replacer.ReplaceText,{"Facility"}),
+				    #"Endret type" = Table.TransformColumnTypes(#"Erstattet verdi8",{{"År", type text}}),
+				    #"Duplikater fjernet1" = Table.Distinct(#"Endret type", {"loc_key"})
+				in
+				    #"Duplikater fjernet1"
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigasjon
+

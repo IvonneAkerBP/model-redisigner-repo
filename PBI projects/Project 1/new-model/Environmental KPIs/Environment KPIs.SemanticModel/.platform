@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "Environment KPIs"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "e0e3f6b3-ec02-4a7c-9e37-3b1f74574cce"
+  }
+}

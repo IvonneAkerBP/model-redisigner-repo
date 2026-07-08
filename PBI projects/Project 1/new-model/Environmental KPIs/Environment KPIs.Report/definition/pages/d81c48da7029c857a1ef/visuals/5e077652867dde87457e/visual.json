@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "5e077652867dde87457e",
+  "position": {
+    "x": 956.29477590944759,
+    "y": 209.60951721408784,
+    "z": 52125,
+    "height": 394.28571428571428,
+    "width": 493.71428571428567,
+    "tabOrder": 42000
+  },
+  "visualGroup": {
+    "displayName": "nox",
+    "groupMode": "ScaleMode"
+  },
+  "isHidden": true
+}

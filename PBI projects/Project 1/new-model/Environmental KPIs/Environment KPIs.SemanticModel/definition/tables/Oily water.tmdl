@@ -1,0 +1,427 @@
+table 'Oily water'
+	lineageTag: bc1a2946-188c-4852-83d5-76178a2203ad
+
+	measure Reinjectiongrade =
+			
+			CALCULATE(
+			DIVIDE(
+				SUM('Oily water'[Injected Volume]),
+				SUM('Oily water'[Production Volume])
+			), 'Oily water'[Stream Type]="Produced water")
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 8702e2c9-4479-47bc-8312-ecac3707261a
+
+		changedProperty = FormatString
+
+	measure 'KPI reinjected' = MAX('Oily water'[KPI water reinjected])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 021bf095-7157-4177-ab16-7b14cdd9c9c1
+
+		changedProperty = FormatString
+
+	measure 'Discharged Oil Mass ISO (mg) divided by Discharged Volume (L)' =
+			
+			DIVIDE(
+				SUM('Oily water'[Discharged Oil Mass ISO (mg)]),
+				SUM('Oily water'[Discharged Volume (L)])
+			)
+		formatString: 0
+		lineageTag: 364fb9c1-4e9b-49f5-9982-50e4bf995038
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Discharged Oil Mass ISO (mg) YTD' =
+			
+			IF(
+				ISFILTERED('Dim_Date'[Date]),
+				ERROR("Time intelligence quick measures can only be grouped or filtered by the Power BI-provided date hierarchy or primary date column."),
+				TOTALYTD(
+					SUM('Oily water'[Discharged Oil Mass ISO (mg)]),
+					'Dim_Date'[Date].[Date]
+				)
+			)
+		lineageTag: b8babde2-09cf-46b2-ae83-a2752e380c0e
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "YearToDate"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Discharged Oil Mass ISO (mg) divided by Discharged Volume (L) YTD' =
+			
+			IF(
+				ISFILTERED('Dim_Date'[Date]),
+				ERROR("Rask oppretting av mål for tidsintelligens kan bare grupperes eller filtreres etter datohierarkiet eller den primære datokolonnen levert av Power BI."),
+				TOTALYTD(
+					[Discharged Oil Mass ISO (mg) divided by Discharged Volume (L)],
+					'Dim_Date'[Date].[Date]
+				)
+			)
+		formatString: 0
+		lineageTag: 92fbee52-6a01-4658-8d05-62973b8f0c75
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "YearToDate"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Discharged Volume (L) YTD' =
+			
+			IF(
+				ISFILTERED('Dim_Date'[Date]),
+				ERROR("Rask oppretting av mål for tidsintelligens kan bare grupperes eller filtreres etter datohierarkiet eller den primære datokolonnen levert av Power BI."),
+				TOTALYTD(
+					SUM('Oily water'[Discharged Volume (L)]),
+					'Dim_Date'[Date].[Date]
+				)
+			)
+		lineageTag: 8c809303-6a4f-4706-a7f2-f19db45b3fed
+
+		extendedProperty MeasureTemplate =
+				{
+				  "version": 0,
+				  "daxTemplateName": "YearToDate"
+				}
+
+		changedProperty = FormatString
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Asset
+		dataType: string
+		lineageTag: 9872a1a2-9c28-4d89-918a-dceb86a9feee
+		summarizeBy: none
+		sourceColumn: Asset
+
+		annotation SummarizationSetBy = Automatic
+
+	column facility
+		dataType: string
+		lineageTag: 15a3b129-9201-40ee-bf7a-4c38963aaa59
+		summarizeBy: none
+		sourceColumn: facility
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Stream Type'
+		dataType: string
+		lineageTag: e3f4e267-4995-442a-b74a-05dc14e746af
+		summarizeBy: none
+		sourceColumn: Stream Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Discharged Oil Concentration ISO'
+		dataType: double
+		lineageTag: 13edb979-e623-4396-b356-467bb0ba93c8
+		summarizeBy: sum
+		sourceColumn: Discharged Oil Concentration ISO
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Production Volume'
+		dataType: double
+		lineageTag: 21910c53-e2bb-4bac-b84d-c41394efdbf6
+		summarizeBy: sum
+		sourceColumn: Production Volume
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Injected Volume'
+		dataType: double
+		lineageTag: 7e94b675-c7c7-445f-bc0e-b98367e33ca5
+		summarizeBy: sum
+		sourceColumn: Injected Volume
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Discharged Volume (L)'
+		dataType: double
+		lineageTag: 3f2d217b-7d0d-4938-ad0f-0bb668983bf7
+		summarizeBy: sum
+		sourceColumn: Discharged Volume (L)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column loc_key
+		dataType: string
+		lineageTag: 9e944d80-0f80-45b2-991e-4ca7f876c48c
+		summarizeBy: none
+		sourceColumn: loc_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column Tillatelser
+		dataType: int64
+		formatString: 0
+		lineageTag: 680c686b-aa02-41ac-a2f5-9b520610a617
+		summarizeBy: sum
+		sourceColumn: Tillatelser
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'KPI Oil to sea'
+		dataType: double
+		formatString: 0
+		lineageTag: b277a414-966f-4369-b892-f4e0585d2417
+		summarizeBy: sum
+		sourceColumn: KPI Oil to sea
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'KPI drain water'
+		dataType: int64
+		formatString: 0
+		lineageTag: 1af4a90d-e456-42fa-bdad-75d3fd6e1145
+		summarizeBy: sum
+		sourceColumn: KPI drain water
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'KPI water reinjected'
+		dataType: double
+		formatString: 0.00\ %;-0.00\ %;0.00\ %
+		lineageTag: 60e39ca0-cb85-4da8-9a30-83f748db7fc9
+		summarizeBy: sum
+		sourceColumn: KPI water reinjected
+
+		changedProperty = FormatString
+
+		annotation SummarizationSetBy = Automatic
+
+	column Time_Id
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 34ab1b13-7a9e-4f1f-860c-e143f9dc2e6d
+		summarizeBy: none
+		sourceColumn: Time_Id
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Field
+		dataType: string
+		lineageTag: 16f6ae7b-0ffd-44e2-a9a9-5cf3a7cde079
+		summarizeBy: none
+		sourceColumn: Field
+
+		annotation SummarizationSetBy = Automatic
+
+	column År
+		dataType: int64
+		formatString: 0
+		lineageTag: 0fb7590f-0229-4c7e-9cfb-7faa6faaf61a
+		summarizeBy: sum
+		sourceColumn: År
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Discharged Oil Mass ISO (mg)'
+		dataType: double
+		lineageTag: d8aa77bd-32fa-4769-8dd0-d62584de5bdb
+		summarizeBy: sum
+		sourceColumn: Discharged Oil Mass ISO (mg)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'Oily water-e826c72e-f97c-4d87-a07e-1f5f4d956217' = m
+		mode: import
+		source = ```
+				let
+				    Source = Sql.Database(
+				        "obax4o2iqosevp5oa2r6dbtune-2dhddioar5aebauc4huzjvnrve.datawarehouse.fabric.microsoft.com",
+				        "wh_gold_hsseq",
+				        [Query = "
+				WITH base AS (
+				    SELECT
+				        CAST([date] AS date) AS [Time_Id],
+				        
+				        CASE 
+				            WHEN RIGHT([business_area], 5) = ' Area' 
+				                THEN LEFT([business_area], LEN([business_area]) - 5)
+				            ELSE [business_area]
+				        END                                 AS [Asset],
+				
+				        CASE 
+				            WHEN [field] = 'Idun Nord' THEN 'Idun Nord/' + COALESCE(CAST([facility] AS nvarchar(200)), '')
+				            WHEN [field] = 'Alve Nord' THEN 'Alve Nord/' + COALESCE(CAST([facility] AS nvarchar(200)), '')
+				            WHEN [field] = 'Ørn' THEN 'Ørn/' + COALESCE(CAST([facility] AS nvarchar(200)), '')
+				            WHEN [field] = 'Fenris' THEN 'Fenris/' + COALESCE(CAST([facility] AS nvarchar(200)), '')
+				            WHEN [field] = 'Hod'    THEN 'Hod/'    + COALESCE(CAST([facility] AS nvarchar(200)), '')
+				            ELSE COALESCE(CAST([facility] AS nvarchar(200)), '')
+				        END AS [facility],
+				        CASE 
+				            WHEN [field] = 'HANZ'   THEN 'Ivar Aasen'
+				            WHEN [field] = 'Fenris' THEN 'Valhall'
+				            WHEN [field] = 'Hod'    THEN 'Valhall'
+				
+				            WHEN field = 'PL 001B Ivar Aasen'    THEN 'Ivar Aasen'
+				            WHEN field = 'Tambar'                THEN 'Ula'
+				            WHEN field = 'Alve Nord'             THEN 'Skarv'
+				            WHEN field = 'Idun Nord'             THEN 'Skarv'
+				            WHEN field = 'Ørn'                   THEN 'Skarv'
+				            WHEN field = 'Symra'                 THEN 'Ivar Aasen'
+				            WHEN field = 'Solveig'               THEN 'Edvard Grieg'
+				
+				            ELSE [field]
+				        END AS [Field],
+				
+				        [stream_type] AS [Stream Type],
+				
+				        -- Normalize all metric NULLs to 0.0
+				        COALESCE(CAST([discharged_oil_mass_iso_mg] AS float), 0.0) AS [Discharged Oil Mass ISO (mg)],
+				        COALESCE([discharged_oil_concentration_iso_mg_l], 0.0) AS [Discharged Oil Concentration ISO],
+				        COALESCE(CAST([discharged_volume_m3] AS float), 0.0) * 1000 AS [Discharged Volume (L)],
+				        COALESCE([production_volume_m3],                  0.0) AS [Production Volume],
+				        COALESCE([injected_volume_m3],                    0.0) AS [Injected Volume]
+				
+				    FROM [dbt_gold_nems_environment_kpi].[fact_nems__environment_kpi_oily_water_ctt]
+				    WHERE CAST([date] AS date) >= '2020-01-01'
+				      AND CAST([date] AS date) <= CAST(GETDATE() AS date) AND  
+				    fabric_valid_to_date = '9999-12-31 00:00:00.000000'
+				)
+				SELECT
+				    b.*,
+				
+				    [Tillatelser] = CASE
+				        WHEN b.[Field] IN ('Valhall', 'Skarv') AND b.[Stream Type] = 'Drainage Water' AND YEAR(b.[Time_Id]) = 2026 THEN 15
+				        WHEN b.[Field] IN ('Valhall', 'Skarv') AND b.[Stream Type] = 'Drainage Water' AND YEAR(b.[Time_Id]) <> 2026 THEN 30
+				        
+				        WHEN b.[Field] IN ('Ula') AND b.[Stream Type] = 'Drainage Water' THEN 30
+				        
+				        WHEN b.[Field] IN ('Alvheim') AND b.[Stream Type] = 'Drainage Water' AND YEAR(b.[Time_Id]) = 2026 THEN 20
+				        WHEN b.[Field] IN ('Alvheim') AND b.[Stream Type] = 'Drainage Water' AND YEAR(b.[Time_Id]) < 2026 THEN 30
+				        
+				        WHEN b.[Field] IN ('Valhall', 'Ula', 'Skarv', 'Alvheim') AND b.[Stream Type] = 'Produced Water' AND YEAR(b.[Time_Id]) <> 2026 THEN 15
+				        WHEN b.[Field] IN ('Valhall', 'Ula', 'Skarv', 'Alvheim') AND b.[Stream Type] = 'Produced Water' AND YEAR(b.[Time_Id]) = 2026 THEN 30
+				
+				        WHEN b.[Field] IN ('PL 001B Ivar Aasen', 'Edvard Grieg') AND YEAR(b.[Time_Id]) <> 2026 THEN 30
+				        WHEN b.[Field] IN ('Edvard Grieg', 'PL 001B Ivar Aasen') AND YEAR(b.[Time_Id]) = 2026 AND b.[Stream Type] = 'Drainage Water' THEN 15
+				        WHEN b.[Field] IN ('Edvard Grieg', 'PL 001B Ivar Aasen') AND YEAR(b.[Time_Id]) = 2026 AND b.[Stream Type] = 'Produced Water' THEN 30
+				        ELSE NULL
+				    END,
+				
+				    [KPI Oil to sea] = CASE
+				        WHEN b.[Field] = 'Valhall' AND YEAR(b.[Time_Id]) = 2020 THEN 12
+				        WHEN b.[Field] = 'Valhall' AND YEAR(b.[Time_Id]) = 2021 THEN 16
+				        WHEN b.[Field] = 'Valhall' AND YEAR(b.[Time_Id]) = 2022 THEN 16
+				        WHEN b.[Field] = 'Valhall' AND YEAR(b.[Time_Id]) > 2022 AND YEAR(b.[Time_Id]) < 2025 THEN 15
+				        WHEN b.[Field] = 'Valhall' AND YEAR(b.[Time_Id]) = 2025 THEN 17
+				        WHEN b.[Field] = 'Valhall' AND YEAR(b.[Time_Id]) = 2026 THEN 16
+				
+				        WHEN b.[Field] = 'Ula'     AND YEAR(b.[Time_Id]) = 2021 THEN 20
+				        WHEN b.[Field] = 'Ula'     AND YEAR(b.[Time_Id]) > 2021 AND YEAR(b.[Time_Id]) < 2024 THEN 25
+				        WHEN b.[Field] = 'Ula'     AND YEAR(b.[Time_Id]) > 2023 AND YEAR(b.[Time_Id]) < 2025 THEN 22.5
+				        WHEN b.[Field] = 'Ula'     AND YEAR(b.[Time_Id]) = 2025 THEN 21
+				        WHEN b.[Field] = 'Ula'     AND YEAR(b.[Time_Id]) = 2026 THEN 21
+				
+				        WHEN b.[Field] = 'Alvheim' AND YEAR(b.[Time_Id]) < 2021 THEN 25
+				        WHEN b.[Field] = 'Alvheim' AND YEAR(b.[Time_Id]) > 2020 THEN 20
+				
+				        WHEN b.[Field] = 'Skarv'   AND YEAR(b.[Time_Id]) < 2022 THEN 12
+				        WHEN b.[Field] = 'Skarv'   AND YEAR(b.[Time_Id]) >= 2022 AND YEAR(b.[Time_Id]) < 2024 THEN 15
+				        WHEN b.[Field] = 'Skarv'   AND YEAR(b.[Time_Id]) = 2024 THEN 12
+				        WHEN b.[Field] = 'Skarv'   AND YEAR(b.[Time_Id]) = 2025 THEN 15
+				        WHEN b.[Field] = 'Skarv'   AND YEAR(b.[Time_Id]) = 2026 THEN 15
+				
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) <= 2022 THEN 25
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) > 2022 THEN 15
+				
+				        WHEN b.[Field] = 'Edvard Grieg' AND YEAR(b.[Time_Id]) > 2020 THEN 25
+				        ELSE NULL
+				    END,
+				
+				    [KPI drain water] = CASE
+				        WHEN b.[Field] = 'Valhall' AND YEAR(b.[Time_Id]) < 2025 THEN 12
+				        WHEN b.[Field] = 'Valhall' AND YEAR(b.[Time_Id]) = 2025 THEN 15
+				        WHEN b.[Field] = 'Valhall' AND YEAR(b.[Time_Id]) = 2026 THEN 15
+				
+				        WHEN b.[Field] = 'Ula'     AND YEAR(b.[Time_Id]) = 2020 THEN 20
+				        WHEN b.[Field] = 'Ula'     AND YEAR(b.[Time_Id]) = 2021 THEN 15
+				        WHEN b.[Field] = 'Ula'     AND YEAR(b.[Time_Id]) > 2021 AND YEAR(b.[Time_Id]) < 2025 THEN 20
+				        WHEN b.[Field] = 'Ula'     AND YEAR(b.[Time_Id]) = 2025 THEN 15
+				        WHEN b.[Field] = 'Ula'     AND YEAR(b.[Time_Id]) = 2026 THEN 15 
+				
+				        WHEN b.[Field] = 'Alvheim' AND YEAR(b.[Time_Id]) < 2023 THEN 25
+				        WHEN b.[Field] = 'Alvheim' AND YEAR(b.[Time_Id]) > 2022 AND YEAR(b.[Time_Id]) < 2026 THEN 20
+				        WHEN b.[Field] = 'Alvheim' AND YEAR(b.[Time_Id]) = 2026 THEN 15
+				
+				
+				        WHEN b.[Field] = 'Skarv' THEN 12
+				
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) <= 2022 THEN 25
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) = 2023 THEN 20
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) = 2024 THEN 18
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) = 2025 THEN 13
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) = 2026 THEN 13
+				
+				        WHEN b.[Field] = 'Edvard Grieg' AND YEAR(b.[Time_Id]) > 2020 AND YEAR(b.[Time_Id]) < 2023 THEN 25
+				        WHEN b.[Field] = 'Edvard Grieg' AND YEAR(b.[Time_Id]) > 2022 AND YEAR(b.[Time_Id]) < 2024 THEN 20
+				        WHEN b.[Field] = 'Edvard Grieg' AND YEAR(b.[Time_Id]) = 2024 THEN 15
+				        WHEN b.[Field] = 'Edvard Grieg' AND YEAR(b.[Time_Id]) = 2025 THEN 13
+				        WHEN b.[Field] = 'Edvard Grieg' AND YEAR(b.[Time_Id]) = 2026 THEN 10
+				        ELSE NULL 
+				    END,
+				
+				    [KPI water reinjected] = CASE
+				        WHEN b.[Field] = 'Alvheim' AND YEAR(b.[Time_Id]) > 2020 AND YEAR(b.[Time_Id]) < 2024 THEN 0.9
+				        WHEN b.[Field] = 'Alvheim' AND YEAR(b.[Time_Id]) = 2024 THEN 0.95
+				        WHEN b.[Field] = 'Alvheim' AND YEAR(b.[Time_Id]) = 2025 THEN 0.96
+				        WHEN b.[Field] = 'Alvheim' AND YEAR(b.[Time_Id]) = 2026 THEN 0.95
+				
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) < 2021 THEN 0.95
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) > 2020 AND YEAR(b.[Time_Id]) < 2023 THEN 0.97
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) > 2022 AND YEAR(b.[Time_Id]) < 2026 THEN 0.95
+				        WHEN b.[Field] = 'PL 001B Ivar Aasen' AND YEAR(b.[Time_Id]) = 2026 THEN 0.91
+				
+				        WHEN b.[Field] = 'Edvard Grieg' AND YEAR(b.[Time_Id]) > 2020 AND YEAR(b.[Time_Id]) < 2024 THEN 0.95
+				        WHEN b.[Field] = 'Edvard Grieg' AND YEAR(b.[Time_Id]) = 2024 THEN 0.5
+				        WHEN b.[Field] = 'Edvard Grieg' AND YEAR(b.[Time_Id]) = 2025 THEN 0.95
+				        WHEN b.[Field] = 'Edvard Grieg' AND YEAR(b.[Time_Id]) = 2026 THEN 0.95
+				        ELSE NULL
+				    END
+				FROM base AS b;
+				        "]
+				    ),
+				
+				    // Your existing steps
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Time_Id", type date}}),
+				    #"Filtered Rows" = Table.SelectRows(#"Changed Type", each true),
+				    #"År satt inn" = Table.AddColumn(#"Filtered Rows", "År", each Date.Year([Time_Id]), Int64.Type),
+				    #"Sammenslått kolonne satt inn" = Table.AddColumn(#"År satt inn", "loc_key", each Text.Combine({[Asset], [facility], Text.From([År], "nb-NO")}, "_"), type text),
+				    #"Trimmet tekst" = Table.TransformColumns(#"Sammenslått kolonne satt inn",{{"loc_key", Text.Trim, type text}}),
+				    #"Erstattet verdi" = Table.ReplaceValue(#"Trimmet tekst"," ","",Replacer.ReplaceText,{"loc_key"}),
+				    #"Tekst med små bokstaver" = Table.TransformColumns(#"Erstattet verdi",{{"loc_key", Text.Lower, type text}}),
+				    #"Erstattet verdi1" = Table.ReplaceValue(#"Tekst med små bokstaver","HANZ","Ivar Aasen",Replacer.ReplaceText,{"Asset"}),
+				    #"Filtrerte rader" = Table.SelectRows(#"Erstattet verdi1", each true)
+				in
+				    #"Filtrerte rader"
+				```
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigasjon
+

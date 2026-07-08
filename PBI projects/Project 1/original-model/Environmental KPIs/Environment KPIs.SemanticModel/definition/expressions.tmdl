@@ -1,0 +1,15 @@
+expression 'Location (2)' =
+		let
+		    Query2 = #"Oily water"[Field],
+		    #"Removed Duplicates" = List.Distinct(Query2),
+		    #"Converted to Table" = Table.FromList(#"Removed Duplicates", Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+		    #"Renamed Columns" = Table.RenameColumns(#"Converted to Table",{{"Column1", "Location"}}),
+		    #"Replaced Value" = Table.ReplaceValue(#"Renamed Columns","PL 001B Ivar Aasen","Ivar Aasen",Replacer.ReplaceText,{"Location"})
+		in
+		    #"Replaced Value"
+	lineageTag: 23c1d638-7821-4cea-9f51-b2c44fd0ad51
+
+	annotation PBI_NavigationStepName = Navigasjon
+
+	annotation PBI_ResultType = Table
+
